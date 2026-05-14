@@ -22,21 +22,16 @@ const TicketPopup = ({ isOpen, onClose, ticket, onUpdateTicket }) => {
   const type = user?.type?.toLowerCase();
   const isCustomer = type === "customer";
 
-
-
   useEffect(() => {
-  if (successMessage || errorMessage) {
-    const timer = setTimeout(() => {
-      setSuccessMessage("");
-      setErrorMessage("");
-    }, 2000);
+    if (successMessage || errorMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage("");
+        setErrorMessage("");
+      }, 2000);
 
-    return () => clearTimeout(timer);
-  }
-}, [successMessage, errorMessage]);
-
-
-
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage, errorMessage]);
 
   useEffect(() => {
     if (!isOpen || !ticket?.id) return;
@@ -64,8 +59,8 @@ const TicketPopup = ({ isOpen, onClose, ticket, onUpdateTicket }) => {
 
         setComments(
           normalized.sort(
-            (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
-          )
+            (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+          ),
         );
       } catch (err) {
         console.error(err);
@@ -87,10 +82,8 @@ const TicketPopup = ({ isOpen, onClose, ticket, onUpdateTicket }) => {
     } catch (err) {
       console.error("Error loading ticket details:", err);
       setErrorMessage("Failed to load ticket details");
-    
     }
   };
-
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -207,7 +200,6 @@ const TicketPopup = ({ isOpen, onClose, ticket, onUpdateTicket }) => {
       } else {
         setStatus(oldStatus);
         setErrorMessage(res.message || "Failed to update status");
-        
       }
     } catch (err) {
       setStatus(oldStatus);
@@ -220,46 +212,44 @@ const TicketPopup = ({ isOpen, onClose, ticket, onUpdateTicket }) => {
     if (editingComment) {
       if (!editingComment.text.trim()) return;
       try {
-       const res = await ticketAPI.updateComment({
-  id: editingComment.id,
-  ticketId: ticket.sourceId || ticket.id,
+        const res = await ticketAPI.updateComment({
+          id: editingComment.id,
+          ticketId: ticket.sourceId || ticket.id,
 
-  comment: editingComment.text,
-  commentName: loggedInUser?.email || "User",
-  sourceId: ticket.sourceId || 0,
-  sourceTicketId: ticket.sourceId || 0,
-  sourceOrgId: 0,
-  sourceUserName: loggedInUser?.email || "User",
-});
+          comment: editingComment.text,
+          commentName: loggedInUser?.email || "User",
+          sourceId: ticket.sourceId || 0,
+          sourceTicketId: ticket.sourceId || 0,
+          sourceOrgId: 0,
+          sourceUserName: loggedInUser?.email || "User",
+        });
         if (res.success) {
-  setSuccessMessage("Comment updated successfully");
+          setSuccessMessage("Comment updated successfully");
 
- const updated = res.data;
-setComments(prev =>
-  prev.map(c =>
-    c.id === editingComment.id
-      ? { 
-          ...c,
-          comment: updated.comment,
-          createdAt:
-            updated.commentsTime ||
-            updated.commondate?.modifiedon ||
-            new Date().toISOString(),
-        }
-      : c
-  )
-);
+          const updated = res.data;
+          setComments((prev) =>
+            prev.map((c) =>
+              c.id === editingComment.id
+                ? {
+                  ...c,
+                  comment: updated.comment,
+                  createdAt:
+                    updated.commentsTime ||
+                    updated.commondate?.modifiedon ||
+                    new Date().toISOString(),
+                }
+                : c,
+            ),
+          );
 
-  setEditingComment(null);
-  setNewComment("");
-} else {
+          setEditingComment(null);
+          setNewComment("");
+        } else {
           setErrorMessage(res.message || "Failed to update comment");
-          
         }
       } catch (err) {
         console.error(err);
         setErrorMessage("Unexpected error while updating comment");
-      
       }
     } else if (newComment.trim() || image) {
       try {
@@ -290,24 +280,20 @@ setComments(prev =>
           ])[0];
 
           // instant insert (no refetch)
-          setComments(prev =>
+          setComments((prev) =>
             [...prev, normalized].sort(
-              (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
-            )
+              (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+            ),
           );
-
-
 
           setNewComment("");
           setImage(null);
         } else {
           setErrorMessage("Failed to add comment");
-          
         }
       } catch (err) {
         console.error(err);
         setErrorMessage("Unexpected error while adding comment");
-        
       }
     }
   };
@@ -318,25 +304,25 @@ setComments(prev =>
     setSuccessMessage("");
   };
 
- const handleDeleteComment = async (commentId, sourceId) => {
-  try {
-    const res = await ticketAPI.deleteComment({
-      id: commentId,
-      sourceId: sourceId,
-    });
+  const handleDeleteComment = async (commentId, sourceId) => {
+    try {
+      const res = await ticketAPI.deleteComment({
+        id: commentId,
+        sourceId: sourceId,
+      });
 
-    if (res.success) {
-      setComments(prev => prev.filter(c => c.id !== commentId));
-      setSuccessMessage(res.message);
-      setErrorMessage("");
-    } else {
-      setErrorMessage(res.message || "Failed to delete comment");
+      if (res.success) {
+        setComments((prev) => prev.filter((c) => c.id !== commentId));
+        setSuccessMessage(res.message);
+        setErrorMessage("");
+      } else {
+        setErrorMessage(res.message || "Failed to delete comment");
+      }
+    } catch (err) {
+      console.error(err);
+      setErrorMessage("Unexpected error while deleting comment");
     }
-  } catch (err) {
-    console.error(err);
-    setErrorMessage("Unexpected error while deleting comment");
-  }
-};
+  };
 
   if (!isOpen) return null;
 
@@ -544,8 +530,8 @@ setComments(prev =>
                                       <button
                                         onClick={() => toggleMenu(c.id)}
                                         className={`p-1 rounded-full ${isOwnMessage
-                                            ? "hover:bg-blue-400/30 text-white"
-                                            : "hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
+                                          ? "hover:bg-blue-400/30 text-white"
+                                          : "hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
                                           }`}
                                       >
                                         ⋮
@@ -576,7 +562,10 @@ setComments(prev =>
                                           {/* DELETE */}
                                           <button
                                             onClick={() => {
-                                              handleDeleteComment(c.id, ticket.sourceId || ticket.id);
+                                              handleDeleteComment(
+                                                c.id,
+                                                ticket.sourceId || ticket.id,
+                                              );
                                               setActiveMenu(null);
                                             }}
                                             className="w-full text-left px-4 py-2 text-sm 
@@ -596,11 +585,11 @@ setComments(prev =>
                                 {/* TEXTAREA */}
                                 <textarea
                                   className="flex-1 text-sm px-2 py-1 
-                 bg-transparent 
-                 border-b border-gray-300 dark:border-gray-600
-                 focus:outline-none focus:border-blue-500
-                 text-gray-900 dark:text-white 
-                 resize-none"
+                                   bg-transparent 
+                                   border-b border-gray-300 dark:border-gray-600
+                                     focus:outline-none focus:border-blue-500
+                                       text-gray-900 dark:text-white 
+                                           resize-none"
                                   value={editingComment.text}
                                   onChange={(e) =>
                                     setEditingComment((prev) => ({
@@ -618,10 +607,10 @@ setComments(prev =>
                                   <button
                                     onClick={handleAddOrUpdateComment}
                                     className="flex items-center gap-1 px-2 py-1 text-xs rounded-full
-bg-green-500 text-white
-hover:bg-green-600
-dark:bg-green-600 dark:hover:bg-green-400
-transition"
+                                     bg-green-500 text-white
+                                   hover:bg-green-600
+                                   dark:bg-green-600 dark:hover:bg-green-400
+                                       transition"
                                   >
                                     Save
                                   </button>
@@ -629,10 +618,10 @@ transition"
                                   <button
                                     onClick={() => setEditingComment(null)}
                                     className="flex items-center gap-1 px-2 py-1 text-xs rounded-full
-bg-red-500 text-white
-hover:bg-red-600
-dark:bg-red-600 dark:hover:bg-red-700
-transition"
+                                     bg-red-500 text-white
+                                      hover:bg-red-600
+                                         dark:bg-red-600 dark:hover:bg-red-700
+                                             transition"
                                   >
                                     Cancel
                                   </button>
@@ -649,61 +638,45 @@ transition"
                               </p>
                             )}
 
-                            {c.ticketCommentImageVO?.map((img) => (
-                              <div
-                                key={img.id}
-                                className="relative w-32 h-32 mt-2 rounded overflow-hidden"
-                              >
-                                <img
-                                  src={img.commentImage}
-                                  alt="comment-img"
-                                  className="w-32 h-32 object-cover rounded cursor-pointer hover:opacity-80"
-                                  onClick={() =>
-                                    setPreviewImage(img.commentImage)
-                                  }
-                                />
-                                <button
-                                  onClick={() => {
-                                    const link = document.createElement("a");
-                                    link.href = img.commentImage;
-                                    link.download = "comment-image.png";
-                                    link.click();
-                                  }}
-                                  className="absolute top-1 right-1 bg-white dark:bg-gray-800 p-1 rounded-full shadow flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700"
-                                  title="Download"
+
+                            {c.ticketCommentImageVO?.map((img) => {
+                              const imageSrc = img.commentImage?.startsWith(
+                                "data:",
+                              )
+                                ? img.commentImage
+                                : `data:image/png;base64,${img.commentImage}`;
+
+                              return (
+                                <div
+                                  key={img.id}
+                                  className="relative w-32 h-32 mt-2 rounded overflow-hidden"
                                 >
-                                  <Download size={16} />
-                                </button>
-                              </div>
-                            ))}
+                                  <img
+                                    src={imageSrc}
+                                    alt="comment-img"
+                                    className="w-32 h-32 object-cover rounded cursor-pointer hover:opacity-80"
+                                    onClick={() => setPreviewImage(imageSrc)}
+                                  />
+
+                                  <button
+                                    onClick={() => {
+                                      const link = document.createElement("a");
+                                      link.href = imageSrc;
+                                      link.download = "comment-image.png";
+                                      link.click();
+                                    }}
+                                    className="absolute top-1 right-1 bg-white dark:bg-gray-800 p-1 rounded-full shadow flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700"
+                                    title="Download"
+                                  >
+                                    <Download size={16} />
+                                  </button>
+                                </div>
+                              );
+                            })}
                           </div>
                           {isOwnMessage && (
                             <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm">
                               {initial}
-                            </div>
-                          )}
-                          {previewImage && (
-                            <div
-                              className="fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4 animate-fadeIn"
-                              onClick={() => setPreviewImage(null)}
-                            >
-                              <div
-                                className="relative max-w-4xl w-full flex justify-center"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <button
-                                  onClick={() => setPreviewImage(null)}
-                                  className="absolute top-2 right-2 bg-white text-black rounded-full p-1 shadow"
-                                >
-                                  <X size={20} />
-                                </button>
-
-                                <img
-                                  src={previewImage}
-                                  alt="Preview"
-                                  className="max-h-[85vh] w-auto rounded-lg shadow-lg"
-                                />
-                              </div>
                             </div>
                           )}
                         </div>
@@ -737,7 +710,33 @@ transition"
                     </div>
                   )}
                 </div>
+                
               )}
+              {/* IMAGE PREVIEW MODAL */}
+{previewImage && (
+  <div
+    className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4 animate-fadeIn"
+    onClick={() => setPreviewImage(null)}
+  >
+    <div
+      className="relative max-w-5xl w-full flex justify-center"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button
+        onClick={() => setPreviewImage(null)}
+        className="absolute top-2 right-2 bg-white text-black rounded-full p-2 shadow-lg z-10"
+      >
+        <X size={22} />
+      </button>
+
+      <img
+        src={previewImage}
+        alt="Preview"
+        className="max-h-[90vh] max-w-full object-contain rounded-xl shadow-2xl"
+      />
+    </div>
+  </div>
+)}
             </>
           )}
         </div>

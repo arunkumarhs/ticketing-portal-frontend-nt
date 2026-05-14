@@ -176,7 +176,7 @@ const AllTickets = () => {
       });
 
       if (response.success) {
-        setSuccessMessage(`Ticket ${ticketId} assigned to ${employee.name}`);
+        setSuccessMessage(`Ticket ID - ${ticketId} assigned to ${employee.name}`);
         
       } else {
         revertAssign(ticketId);
@@ -369,8 +369,7 @@ const AllTickets = () => {
                 ...(role !== "employee"
                   ? [{ key: "assignedToEmp", label: "Assign To" }]
                   : []),
-                { key: "docDate", label: "Date" },
-                { key: "completedOn", label: "Due Date" },
+                { key: "docDate", label: "Created Date" },
               ].map((col) => (
                 <th
                   key={col.key}
@@ -470,14 +469,10 @@ const AllTickets = () => {
                       )}
                     </td>
                   )}
-                  <td className="px-2 py-2 text-center">
+                  <td className="px-2 py-2 text-left">
                     {formatDate(ticket.docDate)}
                   </td>
-                  <td className="px-2 py-2 text-center">
-                    {ticket.completedOn
-                      ? formatDate(ticket.completedOn)
-                      : "-"}
-                  </td>
+                 
                 </tr>
               );
             })}

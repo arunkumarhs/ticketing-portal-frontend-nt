@@ -177,7 +177,7 @@ const CriticalTickets = () => {
         const empName =
           employees.find((e) => e.email === employeeEmail)?.name ||
           employeeEmail;
-        setSuccessMessage(`Ticket ${ticketId} assigned to ${empName}`);
+        setSuccessMessage(`Ticket ID - ${ticketId} assigned to ${empName}`);
         
       } else {
         revertAssign(ticketId);
@@ -381,8 +381,8 @@ const CriticalTickets = () => {
                 ...(role !== "employee"
                   ? [{ key: "assignedToEmp", label: "Assign To" }]
                   : []),
-                { key: "docDate", label: "Date" },
-                { key: "completedOn", label: "Due Date" },
+                { key: "docDate", label: "Created Date" },
+                
               ].map((col) => (
                 <th
                   key={col.key}
@@ -491,11 +491,7 @@ const CriticalTickets = () => {
                     {formatDate(ticket.docDate)}
                   </td>
 
-                  <td className="px-2 py-2 text-left">
-                    {ticket.completedOn
-                      ? formatDate(ticket.completedOn)
-                      : "-"}
-                  </td>
+                 
                 </tr>
               );
             })}
