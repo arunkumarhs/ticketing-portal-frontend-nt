@@ -21,7 +21,16 @@ const TicketPopup = ({ isOpen, onClose, ticket, onUpdateTicket }) => {
   const type = user?.type?.toLowerCase();
   const isCustomer = type === "customer";
   const [activeMenu, setActiveMenu] = useState(null);
+  const isFinalStatus = (status) => {
+    return ["Completed", "Rejected"].includes(status);
+  };
+  const getStatusOptions = () => {
+    if (type === "employee") {
+      return ["Inprogress", "Completed", "Rejected"];
+    }
 
+    return ["Inprogress", "Completed", "YetToAssign", "Rejected"];
+  };
   useEffect(() => {
     if (successMessage || errorMessage) {
       const timer = setTimeout(() => {
@@ -32,10 +41,6 @@ const TicketPopup = ({ isOpen, onClose, ticket, onUpdateTicket }) => {
       return () => clearTimeout(timer);
     }
   }, [successMessage, errorMessage]);
-
-  
-
-  
 
   const loadTicketDetails = async () => {
     try {
@@ -102,104 +107,104 @@ const TicketPopup = ({ isOpen, onClose, ticket, onUpdateTicket }) => {
     return `${Math.floor(diff / 86400)}d ago`;
   };
 
-const loadComments = async () => {
-  try {
-    if (initialLoad) setLoading(true);
+  const loadComments = async () => {
+    try {
+      if (initialLoad) setLoading(true);
 
-    const ticketId = ticket?.sourceId || ticket?.id;
+      const ticketId = ticket?.sourceId || ticket?.id;
 
-    const [myComments, customerComments] = await Promise.all([
-      ticketAPI.getMyServerComments(ticketId),
-      ticketAPI.getCustomerComments(ticketId),
-    ]);
+      const [myComments, customerComments] = await Promise.all([
+        ticketAPI.getMyServerComments(ticketId),
+        ticketAPI.getCustomerComments(ticketId),
+      ]);
 
-    const combined = [...myComments, ...customerComments];
+      const combined = [...myComments, ...customerComments];
 
-    const normalized = normalizeComments(combined).sort(
-      (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
-    );
+      const normalized = normalizeComments(combined).sort(
+        (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+      );
 
-    setComments((prev) => {
-      const prevString = JSON.stringify(prev);
-      const newString = JSON.stringify(normalized);
+      setComments((prev) => {
+        const prevString = JSON.stringify(prev);
+        const newString = JSON.stringify(normalized);
 
-      // prevent unnecessary rerender
-      if (prevString === newString) {
-        return prev;
+        // prevent unnecessary rerender
+        if (prevString === newString) {
+          return prev;
+        }
+
+        return normalized;
+      });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      if (initialLoad) {
+        setLoading(false);
+        setInitialLoad(false);
       }
-
-      return normalized;
-    });
-  } catch (err) {
-    console.error(err);
-  } finally {
-    if (initialLoad) {
-      setLoading(false);
-      setInitialLoad(false);
     }
-  }
-};
+  };
 
-const checkForUpdates = async () => {
-  try {
-    const latestTicket = await ticketAPI.getTicketById(ticket.id);
+  const checkForUpdates = async () => {
+    try {
+      const latestTicket = await ticketAPI.getTicketById(ticket.id);
 
-    setTicketData((prev) => {
-      const prevString = JSON.stringify(prev);
-      const newString = JSON.stringify(latestTicket);
+      setTicketData((prev) => {
+        const prevString = JSON.stringify(prev);
+        const newString = JSON.stringify(latestTicket);
 
-      // no UI rerender if same
-      if (prevString === newString) {
-        return prev;
+        // no UI rerender if same
+        if (prevString === newString) {
+          return prev;
+        }
+
+        setStatus(latestTicket.status || "Inprogress");
+
+        return latestTicket;
+      });
+
+      await loadComments();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  /* AUTO REFRESH COMMENTS + TICKET DETAILS */
+  useEffect(() => {
+    if (!isOpen || !ticket?.id) return;
+
+    checkForUpdates();
+
+    const interval = setInterval(async () => {
+      try {
+        const ticketId = ticket?.sourceId || ticket?.id;
+
+        const [myComments, customerComments] = await Promise.all([
+          ticketAPI.getMyServerComments(ticketId),
+          ticketAPI.getCustomerComments(ticketId),
+        ]);
+
+        const combined = [...myComments, ...customerComments];
+
+        const normalized = normalizeComments(combined).sort(
+          (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+        );
+
+        // update ONLY if count changed
+        setComments((prev) => {
+          if (prev.length === normalized.length) {
+            return prev;
+          }
+
+          return normalized;
+        });
+      } catch (err) {
+        console.error(err);
       }
+    }, 5000);
 
-      setStatus(latestTicket.status || "Inprogress");
-
-      return latestTicket;
-    });
-
-    await loadComments();
-  } catch (err) {
-    console.error(err);
-  }
-};
-
-/* AUTO REFRESH COMMENTS + TICKET DETAILS */
-useEffect(() => {
-  if (!isOpen || !ticket?.id) return;
-
-  checkForUpdates();
-
- const interval = setInterval(async () => {
-  try {
-    const ticketId = ticket?.sourceId || ticket?.id;
-
-    const [myComments, customerComments] = await Promise.all([
-      ticketAPI.getMyServerComments(ticketId),
-      ticketAPI.getCustomerComments(ticketId),
-    ]);
-
-    const combined = [...myComments, ...customerComments];
-
-    const normalized = normalizeComments(combined).sort(
-      (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
-    );
-
-    // update ONLY if count changed
-    setComments((prev) => {
-      if (prev.length === normalized.length) {
-        return prev;
-      }
-
-      return normalized;
-    });
-  } catch (err) {
-    console.error(err);
-  }
-}, 5000);
-
-  return () => clearInterval(interval);
-}, [isOpen, ticket?.id]);
+    return () => clearInterval(interval);
+  }, [isOpen, ticket?.id]);
 
   const getDisplayName = (comment) => {
     const raw = comment?.sourceUserName || comment?.commentName || "User";
@@ -213,7 +218,11 @@ useEffect(() => {
 
   const handleStatusChange = async (newStatus) => {
     const oldStatus = status;
+
+    if (isFinalStatus(status)) return;
+
     setStatus(newStatus);
+
     try {
       const res = await ticketAPI.changeTicketStatus({
         id: ticket.id,
@@ -260,13 +269,13 @@ useEffect(() => {
             prev.map((c) =>
               c.id === editingComment.id
                 ? {
-                  ...c,
-                  comment: updated.comment,
-                  createdAt:
-                    updated.commentsTime ||
-                    updated.commondate?.modifiedon ||
-                    new Date().toISOString(),
-                }
+                    ...c,
+                    comment: updated.comment,
+                    createdAt:
+                      updated.commentsTime ||
+                      updated.commondate?.modifiedon ||
+                      new Date().toISOString(),
+                  }
                 : c,
             ),
           );
@@ -357,9 +366,9 @@ useEffect(() => {
 
   return (
     <div
-  className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-3"
-  onClick={onClose}
->
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-3"
+      onClick={onClose}
+    >
       {/* {(successMessage || errorMessage) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
 
@@ -397,10 +406,10 @@ useEffect(() => {
         </div>
       )} */}
 
- <div
-  className="w-full max-w-xl max-h-[90vh] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200 dark:border-gray-700"
-  onClick={(e) => e.stopPropagation()}
->
+      <div
+        className="w-full max-w-xl max-h-[90vh] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200 dark:border-gray-700"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* HEADER */}
         <div className="flex justify-between items-center px-5 py-3 border-b bg-gray-50 dark:bg-gray-800">
           <h2 className="font-semibold text-gray-900 dark:text-white">
@@ -427,13 +436,14 @@ useEffect(() => {
                   <select
                     value={status}
                     onChange={(e) => handleStatusChange(e.target.value)}
-                    disabled={isCustomer}
+                    disabled={isCustomer || isFinalStatus(status)}
                     className="px-2 py-1 rounded border bg-white dark:bg-gray-700"
                   >
-                    <option value="Inprogress">Inprogress</option>
-                    <option value="Completed">Completed</option>
-                    <option value="YetToAssign">YetToAssign</option>
-                    <option value="Rejected">Rejected</option>
+                    {getStatusOptions().map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <p>
@@ -517,8 +527,9 @@ useEffect(() => {
                       return (
                         <div
                           key={c.id}
-                          className={`flex gap-3 items-start ${isOwnMessage ? "justify-end" : "justify-start"
-                            }`}
+                          className={`flex gap-3 items-start ${
+                            isOwnMessage ? "justify-end" : "justify-start"
+                          }`}
                         >
                           {!isOwnMessage && (
                             <div className="w-8 h-8 rounded-full bg-blue-500 dark:bg-blue-600 text-white flex items-center justify-center text-sm">
@@ -527,27 +538,30 @@ useEffect(() => {
                           )}
 
                           <div
-                            className={`max-w-[75%] rounded-2xl px-3 py-2 relative ${isOwnMessage
-                              ? "bg-blue-500 text-white dark:bg-blue-600"
-                              : "bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-gray-100"
-                              } ${isOwnMessage ? "ml-auto" : "mr-auto"}`}
+                            className={`max-w-[75%] rounded-2xl px-3 py-2 relative ${
+                              isOwnMessage
+                                ? "bg-blue-500 text-white dark:bg-blue-600"
+                                : "bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-gray-100"
+                            } ${isOwnMessage ? "ml-auto" : "mr-auto"}`}
                           >
                             <div className="flex items-center justify-between gap-2">
                               <p
-                                className={`text-sm font-medium ${isOwnMessage
-                                  ? "text-white"
-                                  : "text-gray-900 dark:text-gray-100"
-                                  }`}
+                                className={`text-sm font-medium ${
+                                  isOwnMessage
+                                    ? "text-white"
+                                    : "text-gray-900 dark:text-gray-100"
+                                }`}
                               >
                                 {name}
                               </p>
                               <div className="flex items-center gap-2">
                                 {/* TIME AGO */}
                                 <span
-                                  className={`text-xs ${isOwnMessage
-                                    ? "text-blue-100"
-                                    : "text-gray-500 dark:text-gray-400"
-                                    }`}
+                                  className={`text-xs ${
+                                    isOwnMessage
+                                      ? "text-blue-100"
+                                      : "text-gray-500 dark:text-gray-400"
+                                  }`}
                                 >
                                   {timeAgo(c.createdAt)}
                                 </span>
@@ -558,18 +572,20 @@ useEffect(() => {
                                     <div className="relative comment-menu">
                                       <button
                                         onClick={() => toggleMenu(c.id)}
-                                        className={`p-1 rounded-full ${isOwnMessage
-                                          ? "hover:bg-blue-400/30 text-white"
-                                          : "hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
-                                          }`}
+                                        className={`p-1 rounded-full ${
+                                          isOwnMessage
+                                            ? "hover:bg-blue-400/30 text-white"
+                                            : "hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
+                                        }`}
                                       >
                                         ⋮
                                       </button>
 
                                       {activeMenu === c.id && (
                                         <div
-                                          className={`absolute top-7 ${isOwnMessage ? "right-0" : "left-0"
-                                            } bg-white dark:bg-gray-800 
+                                          className={`absolute top-7 ${
+                                            isOwnMessage ? "right-0" : "left-0"
+                                          } bg-white dark:bg-gray-800 
       border border-gray-200 dark:border-gray-700 
       rounded-lg shadow-lg z-10 min-w-[130px] overflow-hidden`}
                                         >
@@ -658,15 +674,15 @@ useEffect(() => {
                               </div>
                             ) : (
                               <p
-                                className={`text-sm mt-1 ${isOwnMessage
-                                  ? "text-white"
-                                  : "text-gray-700 dark:text-gray-300"
-                                  }`}
+                                className={`text-sm mt-1 ${
+                                  isOwnMessage
+                                    ? "text-white"
+                                    : "text-gray-700 dark:text-gray-300"
+                                }`}
                               >
                                 {c.comment}
                               </p>
                             )}
-
 
                             {c.ticketCommentImageVO?.map((img) => {
                               const imageSrc = img.commentImage?.startsWith(
@@ -739,33 +755,32 @@ useEffect(() => {
                     </div>
                   )}
                 </div>
-                
               )}
               {/* IMAGE PREVIEW MODAL */}
-{previewImage && (
-  <div
-    className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4 animate-fadeIn"
-    onClick={() => setPreviewImage(null)}
-  >
-    <div
-      className="relative max-w-5xl w-full flex justify-center"
-      onClick={(e) => e.stopPropagation()}
-    >
-      <button
-        onClick={() => setPreviewImage(null)}
-        className="absolute top-2 right-2 bg-white text-black rounded-full p-2 shadow-lg z-10"
-      >
-        <X size={22} />
-      </button>
+              {previewImage && (
+                <div
+                  className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4 animate-fadeIn"
+                  onClick={() => setPreviewImage(null)}
+                >
+                  <div
+                    className="relative max-w-5xl w-full flex justify-center"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      onClick={() => setPreviewImage(null)}
+                      className="absolute top-2 right-2 bg-white text-black rounded-full p-2 shadow-lg z-10"
+                    >
+                      <X size={22} />
+                    </button>
 
-      <img
-        src={previewImage}
-        alt="Preview"
-        className="max-h-[90vh] max-w-full object-contain rounded-xl shadow-2xl"
-      />
-    </div>
-  </div>
-)}
+                    <img
+                      src={previewImage}
+                      alt="Preview"
+                      className="max-h-[90vh] max-w-full object-contain rounded-xl shadow-2xl"
+                    />
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>
@@ -773,7 +788,5 @@ useEffect(() => {
     </div>
   );
 };
-
-
 
 export default TicketPopup;

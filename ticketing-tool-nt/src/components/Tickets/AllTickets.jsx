@@ -6,7 +6,7 @@ import {
   ChevronDown,
   Check,
   List,
-  X
+  X,
 } from "lucide-react";
 import { ticketAPI } from "../../api/ticketAPI";
 import { employeeAPI } from "../../api/employeeAPI";
@@ -16,9 +16,6 @@ import TicketPopup from "./TicketPopup";
 import TicketFilters from "./TicketFilters";
 
 const AllTickets = () => {
-
-  
-
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sortConfig, setSortConfig] = useState({
@@ -34,7 +31,9 @@ const AllTickets = () => {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  
+  const isFinalStatus = (status) => {
+    return ["Completed", "Rejected"].includes(status);
+  };
 
   const recordsPerPage = 10;
 
@@ -75,15 +74,15 @@ const AllTickets = () => {
             ? normalized
             : role === "employee"
               ? normalized.filter(
-                (t) =>
-                  t.assignedToEmp === user.email ||
-                  t.assignedToEmp === user.name,
-              )
+                  (t) =>
+                    t.assignedToEmp === user.email ||
+                    t.assignedToEmp === user.name,
+                )
               : role === "customer"
                 ? normalized.filter(
-                  (t) =>
-                    t.createdBy === user.email || t.createdBy === user.name,
-                )
+                    (t) =>
+                      t.createdBy === user.email || t.createdBy === user.name,
+                  )
                 : [];
         setTickets(visibleTickets);
       } catch (err) {
@@ -176,8 +175,9 @@ const AllTickets = () => {
       });
 
       if (response.success) {
-        setSuccessMessage(`Ticket ID - ${ticketId} assigned to ${employee.name}`);
-        
+        setSuccessMessage(
+          `Ticket ID - ${ticketId} assigned to ${employee.name}`,
+        );
       } else {
         revertAssign(ticketId);
       }
@@ -196,17 +196,17 @@ const AllTickets = () => {
   };
 
   const formatDate = (date) => {
-  if (!date) return "-";
+    if (!date) return "-";
 
-  const d = new Date(date);
-  if (isNaN(d)) return "-";
+    const d = new Date(date);
+    if (isNaN(d)) return "-";
 
-  const day = String(d.getDate()).padStart(2, "0");
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const year = d.getFullYear();
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
 
-  return `${day}-${month}-${year}`;
-};
+    return `${day}-${month}-${year}`;
+  };
 
   const getPriorityStyle = (priority) => {
     switch ((priority || "").toLowerCase()) {
@@ -223,9 +223,13 @@ const AllTickets = () => {
     }
   };
   const handleStatusChange = async (ticketId, newStatus) => {
+    const ticket = tickets.find((t) => t.id === ticketId);
+
+    // HARD LOCK
+    if (ticket && isFinalStatus(ticket.status)) return;
+
     const oldTickets = [...tickets];
 
-    // optimistic update
     setTickets((prev) =>
       prev.map((t) => (t.id === ticketId ? { ...t, status: newStatus } : t)),
     );
@@ -239,13 +243,12 @@ const AllTickets = () => {
 
       if (res.success) {
         setSuccessMessage("Status updated successfully");
-        
       } else {
-        setTickets(oldTickets); // revert
+        setTickets(oldTickets);
       }
     } catch (err) {
       console.error(err);
-      setTickets(oldTickets); // revert
+      setTickets(oldTickets);
     }
   };
 
@@ -254,57 +257,63 @@ const AllTickets = () => {
       <p className="text-center mt-10 animate-fadeIn">Loading tickets...</p>
     );
 
+  const getStatusOptions = () => {
+    if (role === "employee") {
+      return ["Inprogress", "Completed", "Rejected"];
+    }
+
+    return ["Inprogress", "Completed", "YetToAssign", "Rejected"];
+  };
+
   return (
     <div className="animate-fadeIn px-6 py-6">
       {(successMessage || errorMessage) && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4 animate-fadeIn">
-    
-    <div className="w-full max-w-xs sm:max-w-sm bg-white dark:bg-gray-900 rounded-xl shadow-xl p-5 text-center animate-slideUp border border-gray-200 dark:border-gray-700">
-      
-      {/* Icon */}
-      <div className="flex justify-center mb-3">
-        <div
-          className={`p-2.5 rounded-full ${
-            successMessage
-              ? "bg-green-50 dark:bg-green-500/10"
-              : "bg-red-50 dark:bg-red-500/10"
-          }`}
-        >
-          {successMessage ? (
-            <Check className="w-5 h-5 text-green-600 dark:text-green-400" />
-          ) : (
-            <X className="w-5 h-5 text-red-600 dark:text-red-400" />
-          )}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4 animate-fadeIn">
+          <div className="w-full max-w-xs sm:max-w-sm bg-white dark:bg-gray-900 rounded-xl shadow-xl p-5 text-center animate-slideUp border border-gray-200 dark:border-gray-700">
+            {/* Icon */}
+            <div className="flex justify-center mb-3">
+              <div
+                className={`p-2.5 rounded-full ${
+                  successMessage
+                    ? "bg-green-50 dark:bg-green-500/10"
+                    : "bg-red-50 dark:bg-red-500/10"
+                }`}
+              >
+                {successMessage ? (
+                  <Check className="w-5 h-5 text-green-600 dark:text-green-400" />
+                ) : (
+                  <X className="w-5 h-5 text-red-600 dark:text-red-400" />
+                )}
+              </div>
+            </div>
+
+            {/* Title */}
+            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-1">
+              {successMessage ? "Success" : "Error"}
+            </h2>
+
+            {/* Message */}
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">
+              {successMessage || errorMessage}
+            </p>
+
+            {/* Button */}
+            <button
+              onClick={() => {
+                setSuccessMessage("");
+                setErrorMessage("");
+              }}
+              className={`w-full py-2 rounded-lg text-sm font-medium transition ${
+                successMessage
+                  ? "bg-green-600 hover:bg-green-700 text-white"
+                  : "bg-red-600 hover:bg-red-700 text-white"
+              }`}
+            >
+              {successMessage ? "OK" : "Close"}
+            </button>
+          </div>
         </div>
-      </div>
-
-      {/* Title */}
-      <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-1">
-        {successMessage ? "Success" : "Error"}
-      </h2>
-
-      {/* Message */}
-      <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">
-        {successMessage || errorMessage}
-      </p>
-
-      {/* Button */}
-      <button
-        onClick={() => {
-          setSuccessMessage("");
-          setErrorMessage("");
-        }}
-        className={`w-full py-2 rounded-lg text-sm font-medium transition ${
-          successMessage
-            ? "bg-green-600 hover:bg-green-700 text-white"
-            : "bg-red-600 hover:bg-red-700 text-white"
-        }`}
-      >
-        {successMessage ? "OK" : "Close"}
-      </button>
-    </div>
-  </div>
-)}
+      )}
 
       <button
         onClick={() => navigate("/menu/ticket")}
@@ -352,170 +361,179 @@ const AllTickets = () => {
         </div>
       </div>
 
-     <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-xl shadow border dark:border-gray-700 animate-slideUp">
-  <table className="w-full table-fixed">
-    
-    <thead>
-      <tr className="border-b border-gray-200/60 dark:border-white/10">
-        
-        <th className="w-[70px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
-          Action
-        </th>
+      <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-xl shadow border dark:border-gray-700 animate-slideUp">
+        <table className="w-full table-fixed">
+          <thead>
+            <tr className="border-b border-gray-200/60 dark:border-white/10">
+              <th className="w-[70px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
+                Action
+              </th>
 
-        <th className="w-[90px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
-          Ticket No
-        </th>
+              <th className="w-[90px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
+                Ticket No
+              </th>
 
-        <th className="w-[200px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
-          Title
-        </th>
+              <th className="w-[200px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
+                Title
+              </th>
 
-        <th className="w-[120px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
-          App
-        </th>
+              <th className="w-[120px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
+                App
+              </th>
 
-        <th className="w-[120px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
-          Company
-        </th>
+              <th className="w-[120px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
+                Company
+              </th>
 
-        <th className="w-[120px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
-          User
-        </th>
+              <th className="w-[120px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
+                User
+              </th>
 
-        <th className="w-[110px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
-          Priority
-        </th>
+              <th className="w-[110px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
+                Priority
+              </th>
 
-        <th className="w-[120px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
-          Status
-        </th>
+              <th className="w-[120px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
+                Status
+              </th>
 
-        {role !== "employee" && (
-          <th className="w-[140px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
-            Assign
-          </th>
-        )}
+              {role !== "employee" && (
+                <th className="w-[140px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
+                  Assign
+                </th>
+              )}
 
-        <th className="w-[110px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
-          Date
-        </th>
-      </tr>
-    </thead>
+              <th className="w-[110px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
+                Date
+              </th>
+            </tr>
+          </thead>
 
-    <tbody>
-      {paginatedTickets.map((ticket, index) => {
-        const assignedEmployee = employees.find(
-          (e) => e.email === ticket.assignedToEmp
-        );
+          <tbody>
+            {paginatedTickets.map((ticket, index) => {
+              const assignedEmployee = employees.find(
+                (e) => e.email === ticket.assignedToEmp,
+              );
 
-        return (
-          <tr
-            key={ticket.id}
-            style={{ animationDelay: `${index * 40}ms` }}
-            className="
+              return (
+                <tr
+                  key={ticket.id}
+                  style={{ animationDelay: `${index * 40}ms` }}
+                  className="
               border-b border-gray-100/60 dark:border-white/5
               hover:bg-gray-50 dark:hover:bg-white/[0.03]
               transition-all duration-200 animate-fadeIn
             "
-          >
-            
-            {/* ACTION */}
-            <td className="px-2 py-3 text-left">
-              <button
-                onClick={() => {
-                  setSelectedTicket(ticket);
-                  setIsPopupOpen(true);
-                }}
-                className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-white/5 border border-blue-100 dark:border-white/10 flex items-center justify-center hover:shadow-md hover:-translate-y-0.5 transition-all"
-              >
-                <Eye className="w-3.5 h-3.5 text-blue-500" />
-              </button>
-            </td>
+                >
+                  {/* ACTION */}
+                  <td className="px-2 py-3 text-left">
+                    <button
+                      onClick={() => {
+                        setSelectedTicket(ticket);
+                        setIsPopupOpen(true);
+                      }}
+                      className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-white/5 border border-blue-100 dark:border-white/10 flex items-center justify-center hover:shadow-md hover:-translate-y-0.5 transition-all"
+                    >
+                      <Eye className="w-3.5 h-3.5 text-blue-500" />
+                    </button>
+                  </td>
 
-            {/* ID */}
-            <td className="px-2 py-3 text-xs text-gray-700 dark:text-gray-300">
-              {ticket.id}
-            </td>
+                  {/* ID */}
+                  <td className="px-2 py-3 text-xs text-gray-700 dark:text-gray-300">
+                    {ticket.id}
+                  </td>
 
-            {/* TITLE */}
-            <td className="px-2 py-3 text-xs text-gray-900 dark:text-white">
-              <div className="truncate max-w-[180px]" title={ticket.title}>
-                {ticket.title}
-              </div>
-            </td>
+                  {/* TITLE */}
+                  <td className="px-2 py-3 text-xs text-gray-900 dark:text-white">
+                    <div
+                      className="truncate max-w-[180px]"
+                      title={ticket.title}
+                    >
+                      {ticket.title}
+                    </div>
+                  </td>
 
-            {/* APP */}
-            <td className="px-2 py-3 text-xs text-gray-600 dark:text-gray-300 truncate">
-              {ticket.application || "-"}
-            </td>
+                  {/* APP */}
+                  <td className="px-2 py-3 text-xs text-gray-600 dark:text-gray-300 truncate">
+                    {ticket.application || "-"}
+                  </td>
 
-            {/* COMPANY */}
-            <td className="px-2 py-3 text-xs text-gray-600 dark:text-gray-300 truncate">
-              {ticket.customer || "-"}
-            </td>
+                  {/* COMPANY */}
+                  <td className="px-2 py-3 text-xs text-gray-600 dark:text-gray-300 truncate">
+                    {ticket.customer || "-"}
+                  </td>
 
-            {/* USER */}
-            <td className="px-2 py-3 text-xs text-gray-600 dark:text-gray-300 truncate">
-              {ticket.createdBy}
-            </td>
+                  {/* USER */}
+                  <td className="px-2 py-3 text-xs text-gray-600 dark:text-gray-300 truncate">
+                    {ticket.createdBy}
+                  </td>
 
-            {/* PRIORITY */}
-            <td className="px-2 py-3">
-              <span className={`px-2 py-1 rounded-md text-[10px] font-medium ${getPriorityStyle(ticket.priority)}`}>
-                {ticket.priority}
-              </span>
-            </td>
+                  {/* PRIORITY */}
+                  <td className="px-2 py-3">
+                    <span
+                      className={`px-2 py-1 rounded-md text-[10px] font-medium ${getPriorityStyle(ticket.priority)}`}
+                    >
+                      {ticket.priority}
+                    </span>
+                  </td>
 
-            {/* STATUS */}
-            <td className="px-2 py-3">
-              <select
-                value={ticket.status}
-                onChange={(e) => handleStatusChange(ticket.id, e.target.value)}
-                disabled={role === "customer"}
-                className="text-xs border rounded px-2 py-1 dark:bg-gray-700"
-              >
-                <option value="Inprogress">Inprogress</option>
-                <option value="Completed">Completed</option>
-                <option value="YetToAssign">YetToAssign</option>
-                <option value="Rejected">Rejected</option>
-              </select>
-            </td>
+                  {/* STATUS */}
+                  <td className="px-2 py-3">
+                    <select
+                      value={ticket.status}
+                      onChange={(e) =>
+                        handleStatusChange(ticket.id, e.target.value)
+                      }
+                      disabled={
+                        role === "customer" || isFinalStatus(ticket.status)
+                      }
+                      className="text-xs border rounded px-2 py-1 dark:bg-gray-700"
+                    >
+                      {getStatusOptions().map((status) => (
+                        <option key={status} value={status}>
+                          {status}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
 
-            {/* ASSIGN */}
-            {role !== "employee" && (
-              <td className="px-2 py-3">
-                {role === "admin" ? (
-                  <select
-                    value={ticket.assignedToEmp || ""}
-                    onChange={(e) => handleAssignChange(ticket.id, e.target.value)}
-                    disabled={assigning[ticket.id]}
-                    className="text-xs border rounded px-2 py-1 dark:bg-gray-700 max-w-[120px]"
-                  >
-                    <option value="">Unassigned</option>
-                    {employees.map((emp) => (
-                      <option key={emp.id} value={emp.email}>
-                        {emp.name}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <span className="text-xs text-gray-600 dark:text-gray-300">
-                    {assignedEmployee?.name || "Unassigned"}
-                  </span>
-                )}
-              </td>
-            )}
+                  {/* ASSIGN */}
+                  {role !== "employee" && (
+                    <td className="px-2 py-3">
+                      {role === "admin" ? (
+                        <select
+                          value={ticket.assignedToEmp || ""}
+                          onChange={(e) =>
+                            handleAssignChange(ticket.id, e.target.value)
+                          }
+                          disabled={assigning[ticket.id]}
+                          className="text-xs border rounded px-2 py-1 dark:bg-gray-700 max-w-[120px]"
+                        >
+                          <option value="">Unassigned</option>
+                          {employees.map((emp) => (
+                            <option key={emp.id} value={emp.email}>
+                              {emp.name}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span className="text-xs text-gray-600 dark:text-gray-300">
+                          {assignedEmployee?.name || "Unassigned"}
+                        </span>
+                      )}
+                    </td>
+                  )}
 
-            {/* DATE */}
-            <td className="px-2 py-3 text-xs text-gray-600 dark:text-gray-300">
-              {formatDate(ticket.docDate)}
-            </td>
-          </tr>
-        );
-      })}
-    </tbody>
-  </table>
-</div>
+                  {/* DATE */}
+                  <td className="px-2 py-3 text-xs text-gray-600 dark:text-gray-300">
+                    {formatDate(ticket.docDate)}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
 
       <div className="flex justify-between items-center mt-4 animate-slideUp">
         <span className="text-sm text-gray-600 dark:text-gray-400">

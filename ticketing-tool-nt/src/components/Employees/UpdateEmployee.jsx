@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ArrowLeft, Save, X, Edit, Search, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { employeeAPI } from "../../api/employeeAPI";
@@ -12,7 +12,7 @@ const UpdateEmployee = () => {
   const [code, setCode] = useState("");
   const [employeeId, setEmployeeId] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
-
+  const [employeeCodes, setEmployeeCodes] = useState([]);
   const [formData, setFormData] = useState({
     employee: "",
     code: "",
@@ -26,6 +26,20 @@ const UpdateEmployee = () => {
     gender: "",
     active: true,
   });
+
+  useEffect(() => {
+    const loadEmployeeCodes = async () => {
+      try {
+        const employees = await employeeAPI.getAllEmployees();
+
+        setEmployeeCodes(employees.map((emp) => emp.code).filter(Boolean));
+      } catch (error) {
+        console.error("Failed to load employee codes", error);
+      }
+    };
+
+    loadEmployeeCodes();
+  }, []);
 
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -48,7 +62,7 @@ const UpdateEmployee = () => {
     try {
       const employees = await employeeAPI.getAllEmployees();
       const emp = employees.find(
-        (e) => e.code.toLowerCase() === code.toLowerCase()
+        (e) => e.code.toLowerCase() === code.toLowerCase(),
       );
 
       if (!emp) {
@@ -79,9 +93,9 @@ const UpdateEmployee = () => {
   };
 
   const handleClear = () => {
-    setCode("");
-    setEmployeeId(null);
-    setIsLoaded(false);
+    setSuccessMessage("");
+    setErrorMessage("");
+
     setFormData({
       employee: "",
       code: "",
@@ -118,7 +132,7 @@ const UpdateEmployee = () => {
 
       if (res.success) {
         setSuccessMessage(
-          `Employee "${formData.employee}" updated successfully!`
+          `Employee "${formData.employee}" updated successfully!`,
         );
 
         setTimeout(() => {
@@ -137,68 +151,65 @@ const UpdateEmployee = () => {
     <div className="px-6 py-6 animate-fadeIn">
       {/* Success Popup */}
       {/* Center Toast (Success / Error) */}
-{(successMessage || errorMessage) && (
-  (() => {
-    const isSuccess = Boolean(successMessage);
-    const message = successMessage || errorMessage;
+      {(successMessage || errorMessage) &&
+        (() => {
+          const isSuccess = Boolean(successMessage);
+          const message = successMessage || errorMessage;
 
-    const handleClose = () => {
-      setSuccessMessage("");
-      setErrorMessage("");
+          const handleClose = () => {
+            setSuccessMessage("");
+            setErrorMessage("");
 
-      if (isSuccess) {
-        navigate("/allemployees");
-      }
-    };
+            if (isSuccess) {
+              navigate("/allemployees");
+            }
+          };
 
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4 animate-fadeIn">
-        
-        <div className="w-full max-w-xs sm:max-w-sm bg-white dark:bg-gray-900 rounded-xl shadow-xl p-5 text-center animate-slideUp border border-gray-200 dark:border-gray-700">
-          
-          {/* Icon */}
-          <div className="flex justify-center mb-3">
-            <div
-              className={`p-2.5 rounded-full ${
-                isSuccess
-                  ? "bg-green-50 dark:bg-green-500/10"
-                  : "bg-red-50 dark:bg-red-500/10"
-              }`}
-            >
-              {isSuccess ? (
-                <Check className="w-5 h-5 text-green-600 dark:text-green-400" />
-              ) : (
-                <X className="w-5 h-5 text-red-600 dark:text-red-400" />
-              )}
+          return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4 animate-fadeIn">
+              <div className="w-full max-w-xs sm:max-w-sm bg-white dark:bg-gray-900 rounded-xl shadow-xl p-5 text-center animate-slideUp border border-gray-200 dark:border-gray-700">
+                {/* Icon */}
+                <div className="flex justify-center mb-3">
+                  <div
+                    className={`p-2.5 rounded-full ${
+                      isSuccess
+                        ? "bg-green-50 dark:bg-green-500/10"
+                        : "bg-red-50 dark:bg-red-500/10"
+                    }`}
+                  >
+                    {isSuccess ? (
+                      <Check className="w-5 h-5 text-green-600 dark:text-green-400" />
+                    ) : (
+                      <X className="w-5 h-5 text-red-600 dark:text-red-400" />
+                    )}
+                  </div>
+                </div>
+
+                {/* Title */}
+                <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                  {isSuccess ? "Success" : "Error"}
+                </h2>
+
+                {/* Message */}
+                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">
+                  {message}
+                </p>
+
+                {/* Button */}
+                <button
+                  onClick={handleClose}
+                  className={`w-full py-2 rounded-lg text-sm font-medium transition ${
+                    isSuccess
+                      ? "bg-green-600 hover:bg-green-700 text-white"
+                      : "bg-red-600 hover:bg-red-700 text-white"
+                  }`}
+                >
+                  {isSuccess ? "Go to Employees" : "Close"}
+                </button>
+              </div>
             </div>
-          </div>
-
-          {/* Title */}
-          <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-1">
-            {isSuccess ? "Success" : "Error"}
-          </h2>
-
-          {/* Message */}
-          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">
-            {message}
-          </p>
-
-          {/* Button */}
-          <button
-            onClick={handleClose}
-            className={`w-full py-2 rounded-lg text-sm font-medium transition ${
-              isSuccess
-                ? "bg-green-600 hover:bg-green-700 text-white"
-                : "bg-red-600 hover:bg-red-700 text-white"
-            }`}
-          >
-            {isSuccess ? "Go to Employees" : "Close"}
-          </button>
-        </div>
-      </div>
-    );
-  })()
-)}
+          );
+        })()}
 
       {/* Back Button */}
       <button
@@ -245,12 +256,18 @@ const UpdateEmployee = () => {
           <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl shadow-md border p-6 space-y-4">
             <h2 className="text-sm font-semibold">Enter Employee Code</h2>
             <input
-              type="text"
+              list="employeeCodes"
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
-              placeholder="Enter Code"
+              placeholder="Select or Search Employee Code"
               className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 outline-none"
             />
+
+            <datalist id="employeeCodes">
+              {employeeCodes.map((empCode) => (
+                <option key={empCode} value={empCode} />
+              ))}
+            </datalist>
             <button
               onClick={handleSearch}
               className="w-full bg-blue-600 text-white py-2 rounded-lg flex justify-center items-center gap-2 hover:bg-blue-700"
@@ -317,14 +334,6 @@ const UpdateEmployee = () => {
                 label="DOJ"
                 selected={formData.doj}
                 onChange={(date) => handleDateChange("doj", date)}
-              />
-
-              <Input
-                label="Password (optional)"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                type="password"
               />
 
               <div>

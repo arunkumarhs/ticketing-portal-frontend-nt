@@ -29,12 +29,16 @@ export const employeeAPI = {
           data.paramObjectsMap?.employeeVO?.map((emp) => ({
             id: emp.id,
             name: emp.employee,
+            employee: emp.employee,
             code: emp.code,
             branch: emp.branch,
             department: emp.department,
             designation: emp.designation,
             email: emp.email,
+            dob: emp.dob,
             doj: emp.doj,
+            gender: emp.gender,
+            active: emp.active,
           })) || []
         );
       }
@@ -50,7 +54,7 @@ export const employeeAPI = {
   getEmployeeByCode: async (code) => {
     try {
       const data = await apiClient.get(
-        `/api/employee/getEmployeeByCode/${code}`
+        `/api/employee/getEmployeeByCode/${code}`,
       );
 
       if (data?.statusFlag === "Ok") {
@@ -87,19 +91,13 @@ export const employeeAPI = {
 
       let data;
       try {
-        data = await apiClient.post(
-          "/api/employee/createemployee",
-          payload
-        );
+        data = await apiClient.post("/api/employee/createemployee", payload);
       } catch (err) {
         console.warn("Retrying create with DTO wrapper...");
 
-        data = await apiClient.post(
-          "/api/employee/createemployee",
-          {
-            createEmployeeDTO: payload,
-          }
-        );
+        data = await apiClient.post("/api/employee/createemployee", {
+          createEmployeeDTO: payload,
+        });
       }
 
       console.log("CREATE RESPONSE:", data);
@@ -113,10 +111,7 @@ export const employeeAPI = {
         error: data?.message || data?.errors || "Failed to create employee",
       };
     } catch (error) {
-      console.error(
-        "CREATE ERROR:",
-        error?.response?.data || error.message
-      );
+      console.error("CREATE ERROR:", error?.response?.data || error.message);
 
       return {
         success: false,
@@ -141,19 +136,13 @@ export const employeeAPI = {
 
       let data;
       try {
-        data = await apiClient.put(
-          "/api/employee/updateEmployee",
-          payload
-        );
+        data = await apiClient.put("/api/employee/updateEmployee", payload);
       } catch (err) {
         console.warn("Retrying update with DTO wrapper...");
 
-        data = await apiClient.put(
-          "/api/employee/updateEmployee",
-          {
-            createEmployeeDTO: payload,
-          }
-        );
+        data = await apiClient.put("/api/employee/updateEmployee", {
+          createEmployeeDTO: payload,
+        });
       }
 
       console.log("UPDATE RESPONSE:", data);
@@ -164,16 +153,10 @@ export const employeeAPI = {
 
       return {
         success: false,
-        error:
-          data?.message ||
-          data?.errors ||
-          "Failed to update employee",
+        error: data?.message || data?.errors || "Failed to update employee",
       };
     } catch (error) {
-      console.error(
-        "UPDATE ERROR:",
-        error?.response?.data || error.message
-      );
+      console.error("UPDATE ERROR:", error?.response?.data || error.message);
 
       return {
         success: false,

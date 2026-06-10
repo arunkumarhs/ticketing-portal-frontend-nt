@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
+import TicketPopup from "../components/Tickets/TicketPopup";
 import {
   PlusCircle,
   List,
@@ -27,7 +28,8 @@ const Dashboard = () => {
   const [tickets, setTickets] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
-
+  const [selectedTicket, setSelectedTicket] = useState(null);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(
     document.documentElement.classList.contains("dark"),
   );
@@ -170,13 +172,6 @@ const Dashboard = () => {
       icon: List,
       color: "from-violet-600 to-indigo-600",
       route: "/alltickets",
-    },
-    {
-      title: "Critical",
-      description: "High priority",
-      icon: FileExclamationPoint,
-      color: "from-red-600 to-rose-600",
-      route: "/criticaltickets",
     },
   ];
 
@@ -530,16 +525,19 @@ const Dashboard = () => {
                       {/* ACTION */}
                       <td className="py-3">
                         <button
-                          onClick={() => navigate("/alltickets")}
+                          onClick={() => {
+                            setSelectedTicket(ticket);
+                            setIsPopupOpen(true);
+                          }}
                           className="
-                    w-7 h-7 rounded-lg
-                    bg-white/80 dark:bg-white/5
-                    border border-gray-200/60 dark:border-white/10
-                    flex items-center justify-center
-                    hover:bg-white dark:hover:bg-white/10
-                    hover:-translate-y-0.5 hover:shadow-md
-                    transition-all duration-200
-                  "
+    w-7 h-7 rounded-lg
+    bg-white/80 dark:bg-white/5
+    border border-gray-200/60 dark:border-white/10
+    flex items-center justify-center
+    hover:bg-white dark:hover:bg-white/10
+    hover:-translate-y-0.5 hover:shadow-md
+    transition-all duration-200
+  "
                         >
                           <Eye className="w-3.5 h-3.5 text-gray-700 dark:text-gray-300" />
                         </button>
@@ -642,6 +640,12 @@ const Dashboard = () => {
           animation: fadeIn 0.4s ease-out;
         }
       `}</style>
+
+      <TicketPopup
+        isOpen={isPopupOpen}
+        onClose={() => setIsPopupOpen(false)}
+        ticket={selectedTicket}
+      />
     </div>
   );
 };

@@ -54,7 +54,7 @@ const Sidebar = () => {
       icon: BarChart3,
       bgColor:
         "bg-gradient-to-br from-teal-600 to-cyan-500 dark:from-teal-500 dark:to-cyan-400",
-      roles: ["admin", "employee", "customer"],
+      roles: ["admin"],
     },
   ];
 

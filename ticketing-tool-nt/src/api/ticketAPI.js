@@ -21,7 +21,10 @@ export const ticketAPI = {
   // Create ticket
   createTicket: async (payload) => {
     try {
-      const response = await apiClient.post("/api/ticket/createticket", payload);
+      const response = await apiClient.post(
+        "/api/ticket/createticket",
+        payload,
+      );
 
       if (response?.statusFlag === "Ok" || response?.status === true) {
         return response;
@@ -47,7 +50,7 @@ export const ticketAPI = {
           headers: {
             "Content-Type": "multipart/form-data", // browser sets boundary automatically
           },
-        }
+        },
       );
 
       return response.data;
@@ -62,10 +65,10 @@ export const ticketAPI = {
     try {
       const payload = {
         id,
-        assignedTo: assignedToEmployee, 
+        assignedTo: assignedToEmployee,
         assignedToEmployee,
         email,
-        modifiedBy, 
+        modifiedBy,
       };
 
       const response = await apiClient.put("/api/ticket/assignTicket", payload);
@@ -94,22 +97,32 @@ export const ticketAPI = {
   },
 
   // Get ticket priority status count
-  getTicketPriorityStatusCount: async () => {
+  getTicketPriorityStatusCount: async (assignedTo = "all") => {
     try {
-      const data = await apiClient.get("/api/ticket/getTicketPriorityStatusCount");
+      const data = await apiClient.get(
+        "/api/ticket/getTicketPriorityStatusCount",
+        {
+          params: { assignedTo },
+        },
+      );
 
       if (data?.statusFlag === "Ok") {
         return (
           data.paramObjectsMap?.ticketPriorityStatusDetails?.[0] || {
             normal: 0,
-            high: 0,
             medium: 0,
+            high: 0,
             total: 0,
+            normalPer: 0,
+            mediumPer: 0,
+            highPer: 0,
           }
         );
       }
 
-      throw new Error(JSON.stringify(data) || "Failed to fetch ticket priority status count");
+      throw new Error(
+        JSON.stringify(data) || "Failed to fetch ticket priority status count",
+      );
     } catch (error) {
       console.error("Error fetching ticket priority status count:", error);
       throw error;
@@ -119,13 +132,17 @@ export const ticketAPI = {
   // Get employee ticket status counts
   getEmployeeTicketStatusCounts: async () => {
     try {
-      const data = await apiClient.get("/api/ticket/getEmployeeTicketStatusCounts");
+      const data = await apiClient.get(
+        "/api/ticket/getEmployeeTicketStatusCounts",
+      );
 
       if (data?.statusFlag === "Ok") {
         return data.paramObjectsMap?.ticketStatusDetails || [];
       }
 
-      throw new Error(JSON.stringify(data) || "Failed to fetch employee ticket status counts");
+      throw new Error(
+        JSON.stringify(data) || "Failed to fetch employee ticket status counts",
+      );
     } catch (error) {
       console.error("Error fetching employee ticket status counts:", error);
       throw error;
@@ -150,236 +167,228 @@ export const ticketAPI = {
     }
   },
 
- // My Server Comments (uses sourceId)
-getMyServerComments: async (sourceId) => {
-  try {
-    const res = await apiClient.get(
-      "/api/ticket/getAllCommentsMyServer",
-      {
+  // My Server Comments (uses sourceId)
+  getMyServerComments: async (sourceId) => {
+    try {
+      const res = await apiClient.get("/api/ticket/getAllCommentsMyServer", {
         params: { ticketId: sourceId }, // 🔥 IMPORTANT
+      });
+
+      if (res?.statusFlag === "Ok") {
+        return res.paramObjectsMap?.commentsVO || [];
       }
-    );
 
-    if (res?.statusFlag === "Ok") {
-      return res.paramObjectsMap?.commentsVO || [];
+      return [];
+    } catch (err) {
+      console.error("Error fetching MY SERVER comments:", err);
+      return [];
     }
+  },
 
-    return [];
-  } catch (err) {
-    console.error("Error fetching MY SERVER comments:", err);
-    return [];
-  }
-},
+  // Customer Comments (uses actual ticketId)
+  getCustomerComments: async (ticketId) => {
+    try {
+      const res = await apiClient.get(
+        "/api/ticket/getAllCommentsAnotherServer",
+        {
+          params: { ticketId }, // normal ticketId
+        },
+      );
 
-// Customer Comments (uses actual ticketId)
-getCustomerComments: async (ticketId) => {
-  try {
-    const res = await apiClient.get(
-      "/api/ticket/getAllCommentsAnotherServer",
-      {
-        params: { ticketId }, // normal ticketId
+      if (res?.statusFlag === "Ok") {
+        return res.paramObjectsMap?.commentsVO || [];
       }
-    );
 
-    if (res?.statusFlag === "Ok") {
-      return res.paramObjectsMap?.commentsVO || [];
+      return [];
+    } catch (err) {
+      console.error("Error fetching CUSTOMER comments:", err);
+      return [];
     }
+  },
+  // getTicketById
+  getTicketById: async (id) => {
+    try {
+      const response = await apiClient.get(`/api/ticket/${id}`);
 
-    return [];
-  } catch (err) {
-    console.error("Error fetching CUSTOMER comments:", err);
-    return [];
-  }
-},
-// getTicketById
-getTicketById: async (id) => {
-  try {
-    const response = await apiClient.get(`/api/ticket/${id}`);
+      if (response?.status === true && response?.statusFlag === "Ok") {
+        return response.paramObjectsMap?.ticketVO || null;
+      }
 
-    if (response?.status === true && response?.statusFlag === "Ok") {
-      return response.paramObjectsMap?.ticketVO || null;
+      console.warn("Ticket not found or invalid response", response);
+      return null;
+    } catch (error) {
+      console.error("Error fetching ticket by ID:", id, error);
+      return null;
     }
+  },
 
-    console.warn("Ticket not found or invalid response", response);
-    return null;
-  } catch (error) {
-    console.error("Error fetching ticket by ID:", id, error);
-    return null;
-  }
-},
+  // Change ticket status
+  changeTicketStatus: async ({ id, status, empCode }) => {
+    try {
+      const payload = {
+        id,
+        status,
+        empCode, // MUST be email (based on your API response)
+        createdon: new Date().toISOString(),
+      };
 
+      const response = await apiClient.put(
+        "/api/ticket/ChangeTicketStatus",
+        payload,
+      );
 
-// Change ticket status
-changeTicketStatus: async ({ id, status, empCode }) => {
-  try {
-    const payload = {
-      id,
-      status,
-      empCode, // MUST be email (based on your API response)
-      createdon: new Date().toISOString(),
-    };
+      if (response?.status === true && response?.statusFlag === "Ok") {
+        return {
+          success: true,
+          ticket: response.paramObjectsMap?.ticketAssign,
+          message: response.paramObjectsMap?.message || "Status updated",
+        };
+      }
 
-    const response = await apiClient.put(
-      "/api/ticket/ChangeTicketStatus",
-      payload
-    );
-
-    if (response?.status === true && response?.statusFlag === "Ok") {
       return {
-        success: true,
-        ticket: response.paramObjectsMap?.ticketAssign, 
-        message: response.paramObjectsMap?.message || "Status updated",
+        success: false,
+        message: "Failed to update status",
+        errors: response?.errors || [],
+      };
+    } catch (error) {
+      console.error("Error updating ticket status:", error);
+      return {
+        success: false,
+        message: error.message || "Unexpected error",
+        errors: [],
       };
     }
+  },
 
-    return {
-      success: false,
-      message: "Failed to update status",
-      errors: response?.errors || [],
-    };
-  } catch (error) {
-    console.error("Error updating ticket status:", error);
-    return {
-      success: false,
-      message: error.message || "Unexpected error",
-      errors: [],
-    };
-  }
-},
+  //createComment
+  createComment: async ({ ticketId, sourceId, comment, commentName }) => {
+    try {
+      const finalTicketId = sourceId || ticketId; // 🔥 FORCE SOURCE ID
 
-//createComment
-createComment: async ({ ticketId, sourceId, comment, commentName }) => {
-  try {
-    const finalTicketId = sourceId || ticketId; // 🔥 FORCE SOURCE ID
+      const payload = {
+        comment: String(comment || ""),
+        commentName: String(commentName || ""),
+        orgId: 1000000009,
+        ticketId: Number(finalTicketId), // ✅ ALWAYS SOURCE ID
+      };
 
-    const payload = {
-      comment: String(comment || ""),
-      commentName: String(commentName || ""),
-      orgId: 1000000009,
-      ticketId: Number(finalTicketId), // ✅ ALWAYS SOURCE ID
-    };
+      console.log("CREATE COMMENT PAYLOAD:", payload);
 
-    console.log("CREATE COMMENT PAYLOAD:", payload);
+      const response = await apiClient.post(
+        "/api/ticket/createComments",
+        payload,
+      );
 
-    const response = await apiClient.post(
-      "/api/ticket/createComments",
-      payload
-    );
+      const commentVO = response?.paramObjectsMap?.commentVO;
 
-    const commentVO = response?.paramObjectsMap?.commentVO;
+      if (commentVO) {
+        return {
+          success: true,
+          data: commentVO,
+        };
+      }
 
-    if (commentVO) {
       return {
-        success: true,
-        data: commentVO,
+        success: false,
+        message: "Failed to create comment",
+      };
+    } catch (error) {
+      console.error("Error creating comment:", error);
+      return {
+        success: false,
+        message: error.message || "Error creating comment",
       };
     }
-
-    return {
-      success: false,
-      message: "Failed to create comment",
-    };
-  } catch (error) {
-    console.error("Error creating comment:", error);
-    return {
-      success: false,
-      message: error.message || "Error creating comment",
-    };
-  }
-},
-// deleteComment
-deleteComment: async ({ id, sourceId }) => {
-  try {
-    const response = await apiClient.delete(
-      "/api/ticket/deleteComments",
-      {
+  },
+  // deleteComment
+  deleteComment: async ({ id, sourceId }) => {
+    try {
+      const response = await apiClient.delete("/api/ticket/deleteComments", {
         params: {
           id: Number(id),
           sourceId: Number(sourceId),
         },
+      });
+
+      if (response?.status === true || response?.statusFlag === "Ok") {
+        return {
+          success: true,
+          message:
+            response?.paramObjectsMap?.message ||
+            "Comment deleted successfully",
+        };
       }
-    );
 
-    if (response?.status === true || response?.statusFlag === "Ok") {
       return {
-        success: true,
+        success: false,
+        message: "Failed to delete comment",
+      };
+    } catch (error) {
+      console.error("Error deleting comment:", error.response?.data || error);
+
+      return {
+        success: false,
         message:
-          response?.paramObjectsMap?.message ||
-          "Comment deleted successfully",
+          error.response?.data?.paramObjectsMap?.message ||
+          error.message ||
+          "Error deleting comment",
       };
     }
+  },
 
-    return {
-      success: false,
-      message: "Failed to delete comment",
-    };
-  } catch (error) {
-    console.error("Error deleting comment:", error.response?.data || error);
+  // updateComment
+  updateComment: async ({
+    id,
+    ticketId,
+    commentName,
+    comment,
+    sourceId,
+    sourceOrgId = 0,
+    sourceTicketId = 0,
+    sourceUserName = "",
+  }) => {
+    try {
+      const payload = {
+        id: Number(id),
+        comment: String(comment || ""),
+        commentName: String(commentName || ""),
+        orgId: 1000000009, // ✅ REQUIRED
+        ticketId: Number(ticketId),
 
-    return {
-      success: false,
-      message:
-        error.response?.data?.paramObjectsMap?.message ||
-        error.message ||
-        "Error deleting comment",
-    };
-  }
-},
+        // ✅ REQUIRED BY BACKEND
+        sourceId: Number(id),
+        sourceOrgId,
+        sourceTicketId,
+        sourceUserName,
+      };
 
-// updateComment
-updateComment: async ({
-  id,
-  ticketId,
-  commentName,
-  comment,
-  sourceId,
-  sourceOrgId = 0,
-  sourceTicketId = 0,
-  sourceUserName = "",
-}) => {
-  try {
-    const payload = {
-      id: Number(id),
-      comment: String(comment || ""),
-      commentName: String(commentName || ""),
-      orgId: 1000000009, // ✅ REQUIRED
-      ticketId: Number(ticketId),
+      console.log("UPDATE COMMENT PAYLOAD:", payload);
 
-      // ✅ REQUIRED BY BACKEND
-      sourceId:Number(id),
-      sourceOrgId,
-      sourceTicketId,
-      sourceUserName,
-    };
+      const response = await apiClient.put(
+        "/api/ticket/updateComments",
+        payload,
+      );
 
-    console.log("UPDATE COMMENT PAYLOAD:", payload);
+      if (response?.id) {
+        return {
+          success: true,
+          data: response,
+        };
+      }
 
-    const response = await apiClient.put(
-      "/api/ticket/updateComments",
-      payload
-    );
-
-    if (response?.id) {
       return {
-        success: true,
-        data: response,
+        success: false,
+        message: "Failed to update comment",
+      };
+    } catch (error) {
+      console.error("Error updating comment:", error.response?.data || error);
+      return {
+        success: false,
+        message:
+          error.response?.data?.message ||
+          error.message ||
+          "Error updating comment",
       };
     }
-
-    return {
-      success: false,
-      message: "Failed to update comment",
-    };
-  } catch (error) {
-    console.error("Error updating comment:", error.response?.data || error);
-    return {
-      success: false,
-      message:
-        error.response?.data?.message ||
-        error.message ||
-        "Error updating comment",
-    };
-  }
-}
-
+  },
 };
