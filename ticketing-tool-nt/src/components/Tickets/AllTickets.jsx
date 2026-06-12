@@ -332,7 +332,7 @@ const AllTickets = () => {
               <List className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold dark:text-white">All Tickets</h1>
+              <h1 className="text-lg font-bold dark:text-white">Ticket List</h1>
               <p className="text-xs text-gray-600 dark:text-gray-400">
                 View and manage all tickets
               </p>

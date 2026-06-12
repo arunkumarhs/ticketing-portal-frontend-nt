@@ -116,7 +116,7 @@ const TicketPriorityChart = () => {
               <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
 
               <span className="text-sm text-gray-700 dark:text-gray-300">
-                High Priority ({priorityData.high}) -{" "}
+                High ({priorityData.high}) -{" "}
                 {Number(priorityData.highPer).toFixed(2)}%
               </span>
             </div>
@@ -128,7 +128,7 @@ const TicketPriorityChart = () => {
               <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
 
               <span className="text-sm text-gray-700 dark:text-gray-300">
-                Medium Priority ({priorityData.medium}) -{" "}
+                Medium ({priorityData.medium}) -{" "}
                 {Number(priorityData.mediumPer).toFixed(2)}%
               </span>
             </div>
@@ -140,7 +140,7 @@ const TicketPriorityChart = () => {
               <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
 
               <span className="text-sm text-gray-700 dark:text-gray-300">
-                Normal Priority ({priorityData.normal}) -{" "}
+                Low ({priorityData.normal}) -{" "}
                 {Number(priorityData.normalPer).toFixed(2)}%
               </span>
             </div>

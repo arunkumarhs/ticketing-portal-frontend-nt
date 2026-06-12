@@ -114,9 +114,9 @@ const Dashboard = () => {
 
   const stats = [
     {
-      title: "Total Tickets",
+      title: "Total",
       value: totalTickets,
-      subtitle: "All time tickets",
+      subtitle: "submitted tickets",
       icon: LayoutDashboard,
       color: "from-blue-600/20 to-blue-500/5 border-blue-500/20 text-blue-400",
     },
@@ -167,7 +167,7 @@ const Dashboard = () => {
       hideFor: ["employee"],
     },
     {
-      title: "All Tickets",
+      title: "View Tickets",
       description: "View tickets",
       icon: List,
       color: "from-violet-600 to-indigo-600",

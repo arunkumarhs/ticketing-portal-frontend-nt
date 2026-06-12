@@ -20,7 +20,7 @@ const ticketMenu = {
       roles: ["admin","customer"] // only admin can see
     },
     {
-      name: "All Tickets List",
+      name: "View Tickets",
       path: "/alltickets",
       icon: List,
       color: "blue",
