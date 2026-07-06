@@ -294,55 +294,29 @@ const AllTickets = () => {
     const overdue = diff < 0;
 
     let statusLabel = "";
-    let statusStyle = "";
+let statusStyle = "";
 
-    // Not Assigned
-    if (ticket.status === "YetToAssign" || !ticket.assignedToEmp) {
-      statusLabel = "Not Assigned";
-      statusStyle =
-        "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300";
-    }
-
-    // Rejected
-    else if (ticket.status === "Rejected") {
-      statusLabel = "Rejected";
-      statusStyle = "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300";
-    }
-
-    // Completed within SLA
-    else if (ticket.status === "Completed" && !overdue) {
-      statusLabel = "Met SLA";
-      statusStyle =
-        "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300";
-    }
-
-    // Completed after SLA
-    else if (ticket.status === "Completed" && overdue) {
-      statusLabel = "SLA Breached";
-      statusStyle =
-        "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300";
-    }
-
-    // In Progress within SLA
-    else if (ticket.status === "Inprogress" && !overdue) {
-      statusLabel = "On Track";
-      statusStyle =
-        "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300";
-    }
-
-    // In Progress but overdue
-    else if (ticket.status === "Inprogress" && overdue) {
-      statusLabel = "Overdue";
-      statusStyle = "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300";
-    }
-
-    // Default
-    else {
-      statusLabel = overdue ? "Overdue" : "Active";
-      statusStyle = overdue
-        ? "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
-        : "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300";
-    }
+if (ticket.status === "YetToAssign" || !ticket.assignedToEmp) {
+  statusLabel = "Pending";
+  statusStyle = "bg-gray-500/20 text-gray-400";
+} else if (ticket.status === "Rejected") {
+  statusLabel = "Rejected";
+  statusStyle = "bg-red-500/20 text-red-400";
+} else if (ticket.status === "Completed") {
+  if (overdue) {
+    statusLabel = "Breached";
+    statusStyle = "bg-orange-500/20 text-orange-400";
+  } else {
+    statusLabel = "Met SLA";
+    statusStyle = "bg-emerald-500/20 text-emerald-400";
+  }
+} else if (overdue) {
+  statusLabel = "Overdue";
+  statusStyle = "bg-red-500/20 text-red-400";
+} else {
+  statusLabel = "On Track";
+  statusStyle = "bg-indigo-500/20 text-indigo-400";
+}
 
     return {
       sla: `${slaHours}h`,
@@ -351,6 +325,25 @@ const AllTickets = () => {
       statusLabel,
       statusStyle,
     };
+  };
+
+  const getTicketAge = (ticket) => {
+    if (!ticket.docDate) return "-";
+
+    const created = new Date(ticket.docDate).getTime();
+    const diff = Date.now() - created;
+
+    const totalMinutes = Math.floor(diff / 60000);
+
+    const days = Math.floor(totalMinutes / (24 * 60));
+    const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
+    const minutes = totalMinutes % 60;
+
+    if (days > 0) {
+      return `${days}d ${hours}h`;
+    }
+
+    return `${hours}h ${minutes}m`;
   };
 
   const getPriorityStyle = (priority) => {
@@ -551,6 +544,9 @@ const AllTickets = () => {
               <th className="w-[110px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
                 Date
               </th>
+              <th className="w-[110px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
+                Aging
+              </th>
 
               <th className="w-[120px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
                 SLA Status
@@ -690,7 +686,9 @@ const AllTickets = () => {
                   <td className="px-2 py-3 text-xs text-gray-600 dark:text-gray-300">
                     {formatDate(ticket.docDate)}
                   </td>
-
+                  <td className="px-2 py-3 text-xs text-gray-600 dark:text-gray-300">
+                    {getTicketAge(ticket)}
+                  </td>
                   {/* SLA TIME */}
                   <td className="px-2 py-3">
                     {(() => {
