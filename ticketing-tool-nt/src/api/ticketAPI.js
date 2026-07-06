@@ -95,6 +95,45 @@ export const ticketAPI = {
       };
     }
   },
+  // Assign / Update Ticket Priority
+  assignTicketPriority: async ({ ticketId, priority }) => {
+    try {
+      const response = await apiClient.put(
+        "/api/ticket/assignedPriority",
+        null,
+        {
+          params: {
+            ticketId,
+            priority,
+          },
+        },
+      );
+
+      if (response?.status === true && response?.statusFlag === "Ok") {
+        return {
+          success: true,
+          ticket: response.paramObjectsMap?.ticketAssign,
+          message:
+            response.paramObjectsMap?.message ||
+            "Ticket priority updated successfully",
+        };
+      }
+
+      return {
+        success: false,
+        message: "Failed to update ticket priority",
+        errors: response?.errors || [],
+      };
+    } catch (error) {
+      console.error("Error updating ticket priority:", error);
+
+      return {
+        success: false,
+        message: error.message || "Unexpected error occurred",
+        errors: [],
+      };
+    }
+  },
 
   // Get ticket priority status count
   getTicketPriorityStatusCount: async (assignedTo = "all") => {

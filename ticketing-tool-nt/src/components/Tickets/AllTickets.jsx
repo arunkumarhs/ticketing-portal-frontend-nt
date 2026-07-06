@@ -31,16 +31,30 @@ const AllTickets = () => {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
+  const [, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const isFinalStatus = (status) => {
     return ["Completed", "Rejected"].includes(status);
   };
 
   const recordsPerPage = 10;
-
+  const SLA_HOURS = {
+    low: 48,
+    medium: 24,
+    high: 8,
+    critical: 3,
+  };
   const navigate = useNavigate();
   const user = useSelector((state) => state.auth.user);
   const role = user?.type?.toLowerCase();
-
   const [filters, setFilters] = useState({
     application: "",
     status: "",
@@ -206,6 +220,137 @@ const AllTickets = () => {
     const year = d.getFullYear();
 
     return `${day}-${month}-${year}`;
+  };
+
+  const PRIORITIES = ["Low", "Medium", "High", "Critical"];
+
+  const handlePriorityChange = async (ticketId, priority) => {
+    const oldTickets = [...tickets];
+
+    // Optimistic update
+    setTickets((prev) =>
+      prev.map((t) => (t.id === ticketId ? { ...t, priority } : t)),
+    );
+
+    try {
+      const res = await ticketAPI.assignTicketPriority({
+        ticketId,
+        priority,
+      });
+
+      if (res.success) {
+        setSuccessMessage("Priority updated successfully");
+      } else {
+        setTickets(oldTickets);
+        setErrorMessage(res.message);
+      }
+    } catch (err) {
+      console.error(err);
+      setTickets(oldTickets);
+      setErrorMessage("Failed to update priority");
+    }
+  };
+
+  const getSLAStatus = (ticket) => {
+    if (!ticket.docDate) {
+      return {
+        sla: "-",
+        remaining: "-",
+        overdue: false,
+        statusLabel: "No SLA",
+        statusStyle: "bg-gray-100 text-gray-700",
+      };
+    }
+
+    const slaHours = SLA_HOURS[(ticket.priority || "").toLowerCase()] || 24;
+
+    const created = new Date(ticket.docDate).getTime();
+    const expiry = created + slaHours * 60 * 60 * 1000;
+    const diff = expiry - Date.now();
+
+    const formatDuration = (milliseconds) => {
+      const totalMinutes = Math.floor(milliseconds / 60000);
+
+      const days = Math.floor(totalMinutes / (24 * 60));
+      const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
+      const minutes = totalMinutes % 60;
+
+      if (days === 0) {
+        const totalSeconds = Math.floor(milliseconds / 1000);
+        const h = Math.floor(totalSeconds / 3600);
+        const m = Math.floor((totalSeconds % 3600) / 60);
+        const s = totalSeconds % 60;
+
+        return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+      }
+
+      if (days > 0 && hours > 0) return `${days}d ${hours}h`;
+      if (days > 0) return `${days}d`;
+      if (hours > 0) return `${hours}h`;
+
+      return `${minutes}m`;
+    };
+
+    const overdue = diff < 0;
+
+    let statusLabel = "";
+    let statusStyle = "";
+
+    // Not Assigned
+    if (ticket.status === "YetToAssign" || !ticket.assignedToEmp) {
+      statusLabel = "Not Assigned";
+      statusStyle =
+        "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300";
+    }
+
+    // Rejected
+    else if (ticket.status === "Rejected") {
+      statusLabel = "Rejected";
+      statusStyle = "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300";
+    }
+
+    // Completed within SLA
+    else if (ticket.status === "Completed" && !overdue) {
+      statusLabel = "Met SLA";
+      statusStyle =
+        "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300";
+    }
+
+    // Completed after SLA
+    else if (ticket.status === "Completed" && overdue) {
+      statusLabel = "SLA Breached";
+      statusStyle =
+        "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300";
+    }
+
+    // In Progress within SLA
+    else if (ticket.status === "Inprogress" && !overdue) {
+      statusLabel = "On Track";
+      statusStyle =
+        "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300";
+    }
+
+    // In Progress but overdue
+    else if (ticket.status === "Inprogress" && overdue) {
+      statusLabel = "Overdue";
+      statusStyle = "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300";
+    }
+
+    // Default
+    else {
+      statusLabel = overdue ? "Overdue" : "Active";
+      statusStyle = overdue
+        ? "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
+        : "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300";
+    }
+
+    return {
+      sla: `${slaHours}h`,
+      remaining: formatDuration(Math.abs(diff)),
+      overdue,
+      statusLabel,
+      statusStyle,
+    };
   };
 
   const getPriorityStyle = (priority) => {
@@ -406,6 +551,10 @@ const AllTickets = () => {
               <th className="w-[110px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
                 Date
               </th>
+
+              <th className="w-[120px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
+                SLA Status
+              </th>
             </tr>
           </thead>
 
@@ -470,11 +619,24 @@ const AllTickets = () => {
 
                   {/* PRIORITY */}
                   <td className="px-2 py-3">
-                    <span
-                      className={`px-2 py-1 rounded-md text-[10px] font-medium ${getPriorityStyle(ticket.priority)}`}
+                    <select
+                      value={
+                        ticket.priority
+                          ? ticket.priority.charAt(0).toUpperCase() +
+                            ticket.priority.slice(1).toLowerCase()
+                          : "High"
+                      }
+                      onChange={(e) =>
+                        handlePriorityChange(ticket.id, e.target.value)
+                      }
+                      disabled={role !== "admin"}
+                      className="text-xs border rounded px-2 py-1 dark:bg-gray-700 w-full disabled:opacity-60"
                     >
-                      {ticket.priority}
-                    </span>
+                      <option value="Low">Low</option>
+                      <option value="Medium">Medium</option>
+                      <option value="High">High</option>
+                      <option value="Critical">Critical</option>
+                    </select>
                   </td>
 
                   {/* STATUS */}
@@ -527,6 +689,47 @@ const AllTickets = () => {
                   {/* DATE */}
                   <td className="px-2 py-3 text-xs text-gray-600 dark:text-gray-300">
                     {formatDate(ticket.docDate)}
+                  </td>
+
+                  {/* SLA TIME */}
+                  <td className="px-2 py-3">
+                    {(() => {
+                      const sla = getSLAStatus(ticket);
+
+                      let title, value;
+
+                      if (
+                        !ticket.assignedToEmp ||
+                        ticket.status === "YetToAssign"
+                      ) {
+                        title = "Pending";
+                        value = "Assignment";
+                      } else if (ticket.status === "Completed") {
+                        if (sla.overdue) {
+                          title = "Delayed Completion";
+                          value = "";
+                        } else {
+                          title = "Completed";
+                          value = "On Time";
+                        }
+                      } else if (ticket.status === "Rejected") {
+                        title = "Rejected";
+                        value = "Closed";
+                      } else {
+                        title = sla.overdue ? "Late By" : "Time Left";
+                        value = sla.remaining;
+                      }
+
+                      return (
+                        <div
+                          className={`px-1 py-1 rounded-md text-[10px] text-center leading-tight ${sla.statusStyle}`}
+                        >
+                          <span className="font-semibold">
+                            {value ? `${title} - ${value}` : title}
+                          </span>
+                        </div>
+                      );
+                    })()}
                   </td>
                 </tr>
               );
