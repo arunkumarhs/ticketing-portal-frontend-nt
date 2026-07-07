@@ -40,7 +40,7 @@ const TicketPriorityChart = () => {
   }, []);
 
   const chartData = {
-    labels: ["High", "Medium", "Normal"],
+    labels: ["High", "Medium", "Low"],
     datasets: [
       {
         data: [priorityData.high, priorityData.medium, priorityData.normal],
