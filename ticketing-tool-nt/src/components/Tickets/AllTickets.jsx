@@ -7,6 +7,10 @@ import {
   Check,
   List,
   X,
+  CheckCircle2,
+  Clock3,
+  XCircle,
+  UserX,
 } from "lucide-react";
 import { ticketAPI } from "../../api/ticketAPI";
 import { employeeAPI } from "../../api/employeeAPI";
@@ -127,6 +131,62 @@ const AllTickets = () => {
       );
     });
   }, [tickets, filters]);
+
+  const totalTickets = filteredTickets.length;
+
+  const completedTickets = filteredTickets.filter(
+    (t) => t.status === "Completed",
+  ).length;
+
+  const inProgressTickets = filteredTickets.filter(
+    (t) => t.status === "Inprogress",
+  ).length;
+
+  const rejectedTickets = filteredTickets.filter(
+    (t) => t.status === "Rejected",
+  ).length;
+
+  const yetToAssignTickets = filteredTickets.filter(
+    (t) => !t.assignedToEmp || t.status === "YetToAssign",
+  ).length;
+
+  const stats = [
+    {
+      title: "Total Tickets",
+      value: totalTickets,
+      subtitle: "All generated tickets",
+      icon: List,
+      iconColor: "text-blue-500 bg-blue-100 dark:bg-blue-500/10",
+    },
+    {
+      title: "Completed",
+      value: completedTickets,
+      subtitle: "Successfully resolved",
+      icon: CheckCircle2,
+      iconColor: "text-emerald-500 bg-emerald-100 dark:bg-emerald-500/10",
+    },
+    {
+      title: "In Progress",
+      value: inProgressTickets,
+      subtitle: "Currently working",
+      icon: Clock3,
+      iconColor: "text-yellow-500 bg-yellow-100 dark:bg-yellow-500/10",
+    },
+    {
+      title: "Rejected",
+      value: rejectedTickets,
+      subtitle: "Not approved tickets",
+      icon: XCircle,
+      iconColor: "text-red-500 bg-red-100 dark:bg-red-500/10",
+    },
+    {
+      title: "Yet To Assign",
+      value: yetToAssignTickets,
+      subtitle: "Waiting for assignment",
+      icon: UserX,
+      iconColor: "text-purple-500 bg-purple-100 dark:bg-purple-500/10",
+    },
+  ];
 
   // sort
   const sortedTickets = useMemo(() => {
@@ -294,29 +354,29 @@ const AllTickets = () => {
     const overdue = diff < 0;
 
     let statusLabel = "";
-let statusStyle = "";
+    let statusStyle = "";
 
-if (ticket.status === "YetToAssign" || !ticket.assignedToEmp) {
-  statusLabel = "Pending";
-  statusStyle = "bg-gray-500/20 text-gray-400";
-} else if (ticket.status === "Rejected") {
-  statusLabel = "Rejected";
-  statusStyle = "bg-red-500/20 text-red-400";
-} else if (ticket.status === "Completed") {
-  if (overdue) {
-    statusLabel = "Breached";
-    statusStyle = "bg-orange-500/20 text-orange-400";
-  } else {
-    statusLabel = "Met SLA";
-    statusStyle = "bg-emerald-500/20 text-emerald-400";
-  }
-} else if (overdue) {
-  statusLabel = "Overdue";
-  statusStyle = "bg-red-500/20 text-red-400";
-} else {
-  statusLabel = "On Track";
-  statusStyle = "bg-indigo-500/20 text-indigo-400";
-}
+    if (ticket.status === "YetToAssign" || !ticket.assignedToEmp) {
+      statusLabel = "Pending";
+      statusStyle = "bg-gray-500/20 text-gray-400";
+    } else if (ticket.status === "Rejected") {
+      statusLabel = "Rejected";
+      statusStyle = "bg-red-500/20 text-red-400";
+    } else if (ticket.status === "Completed") {
+      if (overdue) {
+        statusLabel = "Breached";
+        statusStyle = "bg-orange-500/20 text-orange-400";
+      } else {
+        statusLabel = "Met SLA";
+        statusStyle = "bg-emerald-500/20 text-emerald-400";
+      }
+    } else if (overdue) {
+      statusLabel = "Overdue";
+      statusStyle = "bg-red-500/20 text-red-400";
+    } else {
+      statusLabel = "On Track";
+      statusStyle = "bg-indigo-500/20 text-indigo-400";
+    }
 
     return {
       sla: `${slaHours}h`,
@@ -363,8 +423,10 @@ if (ticket.status === "YetToAssign" || !ticket.assignedToEmp) {
   const handleStatusChange = async (ticketId, newStatus) => {
     const ticket = tickets.find((t) => t.id === ticketId);
 
-    // HARD LOCK
-    if (ticket && isFinalStatus(ticket.status)) return;
+    // Only employees are locked after final status
+    if (role === "employee" && ticket && isFinalStatus(ticket.status)) {
+      return;
+    }
 
     const oldTickets = [...tickets];
 
@@ -488,17 +550,49 @@ if (ticket.status === "YetToAssign" || !ticket.assignedToEmp) {
               role={role}
             />
 
-            {/* TOTAL BOX */}
-            <div className="px-3 py-1.5 bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700">
-              <p className="text-[10px] text-gray-500 uppercase">Total</p>
-              <p className="text-sm font-bold dark:text-white">
-                {filteredTickets.length}
-              </p>
-            </div>
+    
           </div>
         </div>
       </div>
+      <div className="flex flex-wrap gap-2 mb-4">
+  {stats.map((item, index) => {
+    const Icon = item.icon;
 
+    return (
+      <div
+        key={index}
+        className="
+          flex items-center gap-2
+          min-w-[150px]
+          rounded-lg
+          px-3 py-2
+          bg-white dark:bg-gray-800
+          border border-gray-200 dark:border-gray-700
+          shadow-sm
+          hover:shadow-md
+          transition-all
+        "
+      >
+        <div
+          className={`w-8 h-8 rounded-lg flex items-center justify-center ${item.iconColor}`}
+        >
+          <Icon className="w-4 h-4" />
+        </div>
+
+        <div className="leading-tight">
+          <p className="text-base font-bold text-gray-900 dark:text-white">
+            {item.value}
+          </p>
+
+          
+          <p className="text-[10px] text-gray-500 dark:text-gray-400">
+            {item.subtitle}
+          </p>
+        </div>
+      </div>
+    );
+  })}
+</div>
       <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-xl shadow border dark:border-gray-700 animate-slideUp">
         <table className="w-full table-fixed">
           <thead>
@@ -643,7 +737,8 @@ if (ticket.status === "YetToAssign" || !ticket.assignedToEmp) {
                         handleStatusChange(ticket.id, e.target.value)
                       }
                       disabled={
-                        role === "customer" || isFinalStatus(ticket.status)
+                        role === "customer" ||
+                        (role === "employee" && isFinalStatus(ticket.status))
                       }
                       className="text-xs border rounded px-2 py-1 dark:bg-gray-700"
                     >
@@ -695,7 +790,7 @@ if (ticket.status === "YetToAssign" || !ticket.assignedToEmp) {
                       const sla = getSLAStatus(ticket);
 
                       let title, value;
-                                                                                                                                                                                                    
+
                       if (
                         !ticket.assignedToEmp ||
                         ticket.status === "YetToAssign"

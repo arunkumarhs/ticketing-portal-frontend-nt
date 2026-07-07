@@ -219,7 +219,10 @@ const TicketPopup = ({ isOpen, onClose, ticket, onUpdateTicket }) => {
   const handleStatusChange = async (newStatus) => {
     const oldStatus = status;
 
-    if (isFinalStatus(status)) return;
+    // Lock only employees after final status
+    if (type === "employee" && isFinalStatus(status)) {
+      return;
+    }
 
     setStatus(newStatus);
 
@@ -436,7 +439,10 @@ const TicketPopup = ({ isOpen, onClose, ticket, onUpdateTicket }) => {
                   <select
                     value={status}
                     onChange={(e) => handleStatusChange(e.target.value)}
-                    disabled={isCustomer || isFinalStatus(status)}
+                    disabled={
+                      isCustomer ||
+                      (type === "employee" && isFinalStatus(status))
+                    }
                     className="px-2 py-1 rounded border bg-white dark:bg-gray-700"
                   >
                     {getStatusOptions().map((s) => (
