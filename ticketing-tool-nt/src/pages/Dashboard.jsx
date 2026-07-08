@@ -5,12 +5,14 @@ import TicketPopup from "../components/Tickets/TicketPopup";
 import {
   PlusCircle,
   List,
-  FileExclamationPoint,
   LayoutDashboard,
   Clock3,
   CheckCircle2,
   AlertTriangle,
   Eye,
+  Sparkles,
+  Inbox,
+  Users,
 } from "lucide-react";
 
 import { ticketAPI } from "../api/ticketAPI";
@@ -118,7 +120,9 @@ const Dashboard = () => {
       value: totalTickets,
       subtitle: "submitted tickets",
       icon: LayoutDashboard,
-      color: "from-blue-600/20 to-blue-500/5 border-blue-500/20 text-blue-400",
+      accent: "text-blue-500 dark:text-blue-400",
+      iconBg: "bg-blue-500/10 dark:bg-blue-400/10",
+      ring: "hover:ring-blue-500/20",
     },
     {
       title: "Completed",
@@ -127,8 +131,9 @@ const Dashboard = () => {
         totalTickets ? ((completedTickets / totalTickets) * 100).toFixed(1) : 0
       }% completed`,
       icon: CheckCircle2,
-      color:
-        "from-emerald-600/20 to-emerald-500/5 border-emerald-500/20 text-emerald-400",
+      accent: "text-emerald-500 dark:text-emerald-400",
+      iconBg: "bg-emerald-500/10 dark:bg-emerald-400/10",
+      ring: "hover:ring-emerald-500/20",
     },
     {
       title: "In Progress",
@@ -137,21 +142,22 @@ const Dashboard = () => {
         totalTickets ? ((inProgressTickets / totalTickets) * 100).toFixed(1) : 0
       }% active`,
       icon: Clock3,
-      color:
-        "from-indigo-600/20 to-indigo-500/5 border-indigo-500/20 text-indigo-400",
+      accent: "text-indigo-500 dark:text-indigo-400",
+      iconBg: "bg-indigo-500/10 dark:bg-indigo-400/10",
+      ring: "hover:ring-indigo-500/20",
     },
     {
       title: "Critical",
       value: criticalTickets,
       subtitle: "Need attention",
       icon: AlertTriangle,
-      color: "from-red-600/20 to-rose-500/5 border-red-500/20 text-red-400",
+      accent: "text-red-500 dark:text-red-400",
+      iconBg: "bg-red-500/10 dark:bg-red-400/10",
+      ring: "hover:ring-red-500/20",
     },
     {
       title: "Quick Access",
       isQuickAccess: true,
-      color:
-        "from-violet-600/20 to-indigo-500/5 border-violet-500/20 text-violet-400",
     },
   ];
 
@@ -162,7 +168,7 @@ const Dashboard = () => {
       title: "Create Ticket",
       description: "Submit ticket",
       icon: PlusCircle,
-      color: "from-indigo-600 to-purple-600",
+      color: "from-blue-500 to-blue-700",
       route: "/newticket",
       hideFor: ["employee"],
     },
@@ -170,7 +176,7 @@ const Dashboard = () => {
       title: "View Tickets",
       description: "View tickets",
       icon: List,
-      color: "from-violet-600 to-indigo-600",
+      color: "from-sky-500 to-blue-700",
       route: "/alltickets",
     },
   ];
@@ -227,65 +233,69 @@ const Dashboard = () => {
   const getPriorityStyle = (priority) => {
     switch ((priority || "").toLowerCase()) {
       case "critical":
-        return "bg-red-500/20 text-red-400";
+        return "bg-red-500/15 text-red-500 dark:text-red-400 ring-1 ring-inset ring-red-500/20";
 
       case "high":
-        return "bg-orange-500/20 text-orange-400";
+        return "bg-orange-500/15 text-orange-500 dark:text-orange-400 ring-1 ring-inset ring-orange-500/20";
 
       case "medium":
-        return "bg-yellow-500/20 text-yellow-400";
+        return "bg-yellow-500/15 text-yellow-600 dark:text-yellow-400 ring-1 ring-inset ring-yellow-500/20";
 
       default:
-        return "bg-blue-500/20 text-blue-400";
+        return "bg-blue-500/15 text-blue-500 dark:text-blue-400 ring-1 ring-inset ring-blue-500/20";
     }
   };
 
   const getStatusStyle = (status) => {
     switch ((status || "").toLowerCase()) {
       case "completed":
-        return "bg-emerald-500/20 text-emerald-400";
+        return "bg-emerald-500/15 text-emerald-500 dark:text-emerald-400 ring-1 ring-inset ring-emerald-500/20";
 
       case "inprogress":
-        return "bg-indigo-500/20 text-indigo-400";
+        return "bg-indigo-500/15 text-indigo-500 dark:text-indigo-400 ring-1 ring-inset ring-indigo-500/20";
 
       case "rejected":
-        return "bg-red-500/20 text-red-400";
+        return "bg-red-500/15 text-red-500 dark:text-red-400 ring-1 ring-inset ring-red-500/20";
 
       default:
-        return "bg-yellow-500/20 text-yellow-400";
+        return "bg-yellow-500/15 text-yellow-600 dark:text-yellow-400 ring-1 ring-inset ring-yellow-500/20";
     }
   };
+
+  const greeting = (() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
+  })();
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#050816] text-gray-900 dark:text-white">
-        Loading Dashboard...
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 rounded-full border-2 border-gray-300 dark:border-white/20 border-t-blue-500 animate-spin" />
+          <span className="text-xs text-gray-500 dark:text-gray-400 tracking-wide">
+            Loading dashboard…
+          </span>
+        </div>
       </div>
     );
   }
 
   return (
     <div>
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-[1600px] mx-auto px-3">
         {/* ================= STATS ================= */}
 
-        <div className="grid grid-cols-2 xl:grid-cols-5 gap-2 mb-3">
+        <div className="grid grid-cols-2 xl:grid-cols-5 gap-3 mb-4">
           {stats.map((item, index) => {
             if (item.isQuickAccess) {
               return (
                 <div
                   key={index}
-                  className={`relative rounded-xl border bg-gradient-to-br ${item.color} 
-          p-2.5 backdrop-blur-xl shadow-md h-[88px] flex flex-col justify-between
-          ring-1 ring-black/5 dark:ring-white/10
-          before:absolute before:inset-0 before:rounded-xl 
-          before:bg-white/20 dark:before:bg-transparent`}
+                  className="relative rounded-xl border border-violet-500/20 bg-gradient-to-br from-violet-600/10 to-indigo-500/5 p-2 h-[60px] flex items-center shadow-sm ring-1 ring-black/5 dark:ring-white/10"
                 >
-                  <h2 className="text-[11px] font-semibold text-gray-900 dark:text-white relative z-10">
-                    Quick Access
-                  </h2>
-
-                  <div className="grid grid-cols-2 gap-2 relative z-10">
+                  <div className="grid grid-cols-2 gap-2 w-full">
                     {filteredItems.slice(0, 2).map((a, i) => {
                       const Icon = a.icon;
 
@@ -293,21 +303,17 @@ const Dashboard = () => {
                         <button
                           key={i}
                           onClick={() => navigate(a.route)}
-                          className="flex items-center gap-2 rounded-lg px-2 py-2 
-                  bg-white/60 dark:bg-white/5 
-                  hover:bg-white/80 dark:hover:bg-white/10
-                  backdrop-blur-md transition"
+                          className="flex items-center gap-2 rounded-lg px-2 py-2 bg-white/70 dark:bg-white/5 hover:bg-white dark:hover:bg-white/10 backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50"
                         >
                           <div
-                            className={`w-7 h-7 rounded-md flex items-center justify-center 
-                    bg-gradient-to-r ${a.color}`}
+                            className={`w-6 h-6 shrink-0 rounded-lg flex items-center justify-center bg-gradient-to-br ${a.color} shadow-sm`}
                           >
-                            <Icon className="w-4 h-4 text-white" />
+                            <Icon className="w-3.5 h-3.5 text-white" />
                           </div>
 
-                          <p className="text-[10px] text-gray-900 dark:text-white">
+                          <span className="text-[10px] font-medium text-gray-900 dark:text-white truncate">
                             {a.title}
-                          </p>
+                          </span>
                         </button>
                       );
                     })}
@@ -321,28 +327,21 @@ const Dashboard = () => {
             return (
               <div
                 key={index}
-                className={`relative rounded-xl border bg-gradient-to-br ${item.color} 
-        px-3 py-2.5 shadow-md h-[88px] flex justify-between
-        ring-1 ring-black/5 dark:ring-white/10
-        before:absolute before:inset-0 before:rounded-xl 
-        before:bg-white/15 dark:before:bg-transparent`}
+                className={`group relative rounded-xl border border-gray-200/70 dark:border-white/10 bg-white dark:bg-[#0f172a]/80 px-3 py-2.5 h-[60px] flex items-center gap-3 shadow-sm ring-1 ring-black/[0.02] dark:ring-white/[0.02] transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ${item.ring}`}
               >
-                <div className="relative z-10">
-                  <p className="text-[10px] text-gray-600 dark:text-gray-400">
-                    {item.title}
-                  </p>
-
-                  <h2 className="text-[22px] font-bold text-gray-900 dark:text-white">
-                    {item.value}
-                  </h2>
-
-                  <p className="text-[9px] text-gray-600 dark:text-gray-400">
-                    {item.subtitle}
-                  </p>
+                <div
+                  className={`flex items-center justify-center w-8 h-8 rounded-lg shrink-0 ${item.iconBg}`}
+                >
+                  <Icon className={`w-4 h-4 ${item.accent}`} strokeWidth={2} />
                 </div>
 
-                <div className="w-9 h-9 rounded-xl bg-white/20 dark:bg-white/10 flex items-center justify-center relative z-10">
-                  <Icon className="w-4 h-4" />
+                <div className="leading-tight min-w-0">
+                  <p className="text-[15px] font-bold text-gray-900 dark:text-white tabular-nums">
+                    {item.value}
+                  </p>
+                  <p className="text-[10.5px] font-medium text-gray-500 dark:text-gray-400 truncate">
+                    {item.title} · {item.subtitle}
+                  </p>
                 </div>
               </div>
             );
@@ -351,14 +350,12 @@ const Dashboard = () => {
 
         {/* ================= CHARTS ================= */}
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-4">
-          <div className="rounded-2xl bg-white dark:bg-[#0f172a]/80 border border-gray-200 dark:border-white/10 p-4 shadow-xl h-[320px] flex flex-col">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-4">
+          {/* First Card - Takes 2/3 width */}
+          <div className="xl:col-span-2 rounded-2xl bg-white dark:bg-[#0f172a]/80 border border-gray-200/70 dark:border-white/10 p-4 shadow-sm hover:shadow-md transition-shadow duration-300 h-[300px] flex flex-col">
             <div className="flex items-center justify-between mb-3">
               <div>
-                <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
-                  Employee Ticket Overview
-                </h2>
-                <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                <p className="text-[12px] text-gray-500 dark:text-gray-400">
                   Weekly ticket performance
                 </p>
               </div>
@@ -373,12 +370,10 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="rounded-2xl bg-white dark:bg-[#0f172a]/80 border border-gray-200 dark:border-white/10 p-4 shadow-xl h-[320px] flex flex-col">
+          {/* Second Card - Takes 1/3 width */}
+          <div className="xl:col-span-1 rounded-2xl bg-white dark:bg-[#0f172a]/80 border border-gray-200/70 dark:border-white/10 p-4 shadow-sm hover:shadow-md transition-shadow duration-300 h-[300px] flex flex-col">
             <div className="mb-3">
-              <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
-                Ticket Priority
-              </h2>
-              <p className="text-[11px] text-gray-500 dark:text-gray-400">
+              <p className="text-[12px] text-gray-500 dark:text-gray-400">
                 Distribution overview
               </p>
             </div>
@@ -394,19 +389,16 @@ const Dashboard = () => {
 
         {/* ================= BOTTOM SECTION ================= */}
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
           {/* RECENT TICKETS */}
           <div
             className="
       xl:col-span-2
       rounded-2xl border border-gray-200/70 dark:border-white/10
-      bg-gradient-to-br from-white to-gray-50
-      dark:from-[#0f172a]/90 dark:to-[#0b1220]/90
-      backdrop-blur-xl
-      p-3 shadow-sm
-      animate-fadeIn
-      transition-all duration-300
-      hover:shadow-lg
+      bg-white dark:bg-[#0f172a]/80
+      p-4 shadow-sm
+      transition-shadow duration-300
+      hover:shadow-md
     "
           >
             {/* HEADER */}
@@ -415,211 +407,241 @@ const Dashboard = () => {
                 <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
                   Recent Tickets
                 </h2>
-                <p className="text-[11px] text-gray-500 dark:text-gray-400">
-                  Latest support activities
-                </p>
               </div>
 
               <button
                 onClick={() => navigate("/alltickets")}
                 className="
-          px-2.5 py-1.5 rounded-lg text-[11px]
-          bg-white/80 dark:bg-white/5
+          px-2.5 py-1.5 rounded-lg text-[11px] font-medium
+          bg-gray-50 dark:bg-white/5
           border border-gray-200/70 dark:border-white/10
           text-gray-700 dark:text-gray-300
           hover:bg-white dark:hover:bg-white/10
           hover:-translate-y-0.5 hover:shadow-md
           transition-all duration-200
+          focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40
         "
               >
                 View All
               </button>
             </div>
 
-            {/* TABLE */}
-            <div className="overflow-x-auto">
-              <table className="w-full table-fixed">
-                <thead>
-                  <tr className="border-b border-gray-200/60 dark:border-white/10">
-                    <th className="w-[90px] pb-3 text-[11px] text-left font-medium text-gray-500 dark:text-gray-400">
-                      Ticket ID
-                    </th>
-                    <th className="w-[240px] pb-3 text-[11px] text-left font-medium text-gray-500 dark:text-gray-400">
-                      Subject
-                    </th>
-                    <th className="w-[100px] pb-3 text-[11px] text-left font-medium text-gray-500 dark:text-gray-400">
-                      Priority
-                    </th>
-                    <th className="w-[120px] pb-3 text-[11px] text-left font-medium text-gray-500 dark:text-gray-400">
-                      Status
-                    </th>
-                    <th className="w-[160px] pb-3 text-[11px] text-left font-medium text-gray-500 dark:text-gray-400">
-                      Handled By
-                    </th>
-                    <th className="w-[70px] pb-3 text-[11px] text-left font-medium text-gray-500 dark:text-gray-400">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
+            {/* TABLE / EMPTY STATE */}
+            {recentTickets.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-14 text-center">
+                <div className="w-11 h-11 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center mb-3">
+                  <Inbox className="w-5 h-5 text-gray-400" />
+                </div>
+                <p className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                  No tickets yet
+                </p>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
+                  New tickets will show up here as soon as they're created.
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full table-fixed">
+                  <thead>
+                    <tr className="border-b border-gray-200/60 dark:border-white/10">
+                      <th className="w-[90px] pb-3 text-[11px] text-left font-medium text-gray-500 dark:text-gray-400">
+                        Ticket ID
+                      </th>
+                      <th className="w-[240px] pb-3 text-[11px] text-left font-medium text-gray-500 dark:text-gray-400">
+                        Subject
+                      </th>
+                      <th className="w-[100px] pb-3 text-[11px] text-left font-medium text-gray-500 dark:text-gray-400">
+                        Priority
+                      </th>
+                      <th className="w-[120px] pb-3 text-[11px] text-left font-medium text-gray-500 dark:text-gray-400">
+                        Status
+                      </th>
+                      <th className="w-[160px] pb-3 text-[11px] text-left font-medium text-gray-500 dark:text-gray-400">
+                        Handled By
+                      </th>
+                      <th className="w-[70px] pb-3 text-[11px] text-left font-medium text-gray-500 dark:text-gray-400">
+                        Action
+                      </th>
+                    </tr>
+                  </thead>
 
-                <tbody>
-                  {recentTickets.map((ticket, index) => (
-                    <tr
-                      key={index}
-                      style={{ animationDelay: `${index * 60}ms` }}
-                      className="
+                  <tbody>
+                    {recentTickets.map((ticket, index) => (
+                      <tr
+                        key={index}
+                        style={{ animationDelay: `${index * 60}ms` }}
+                        className="
                 border-b border-gray-100/70 dark:border-white/5
-                hover:bg-gray-100/60 dark:hover:bg-white/[0.03]
-                transition-all duration-200 ease-out
+                last:border-b-0
+                hover:bg-gray-50 dark:hover:bg-white/[0.03]
+                transition-colors duration-200 ease-out
                 animate-fadeIn
               "
-                    >
-                      {/* ID */}
-                      <td className="py-3 text-xs text-gray-700 dark:text-gray-300 truncate">
-                        {ticket.id}
-                      </td>
+                      >
+                        {/* ID */}
+                        <td className="py-3 text-xs font-medium text-gray-700 dark:text-gray-300 truncate">
+                          {ticket.id}
+                        </td>
 
-                      {/* SUBJECT */}
-                      <td className="py-3 text-xs text-gray-900 dark:text-white">
-                        <div
-                          className="max-w-[220px] truncate"
-                          title={ticket.title}
-                        >
-                          {ticket.title}
-                        </div>
-                      </td>
+                        {/* SUBJECT */}
+                        <td className="py-3 text-xs text-gray-900 dark:text-white">
+                          <div
+                            className="max-w-[220px] truncate"
+                            title={ticket.title}
+                          >
+                            {ticket.title}
+                          </div>
+                        </td>
 
-                      {/* PRIORITY */}
-                      <td className="py-3">
-                        <span
-                          className={`
-                    px-2 py-1 rounded-md text-[10px] font-medium
+                        {/* PRIORITY */}
+                        <td className="py-3">
+                          <span
+                            className={`
+                    inline-flex items-center px-2 py-1 rounded-md text-[10px] font-medium
                     ${getPriorityStyle(ticket.priority)}
                     hover:scale-105 transition-transform
                   `}
-                        >
-                          {ticket.priority}
-                        </span>
-                      </td>
+                          >
+                            {ticket.priority}
+                          </span>
+                        </td>
 
-                      {/* STATUS */}
-                      <td className="py-3">
-                        <span
-                          className={`
-                    px-2 py-1 rounded-md text-[10px] font-medium
+                        {/* STATUS */}
+                        <td className="py-3">
+                          <span
+                            className={`
+                    inline-flex items-center px-2 py-1 rounded-md text-[10px] font-medium
                     ${getStatusStyle(ticket.status)}
                     hover:scale-105 transition-transform
                   `}
-                        >
-                          {ticket.status}
-                        </span>
-                      </td>
+                          >
+                            {ticket.status}
+                          </span>
+                        </td>
 
-                      {/* ASSIGNED */}
-                      <td className="py-3 text-xs text-gray-600 dark:text-gray-300">
-                        <div className="truncate max-w-[150px]">
-                          {ticket.assignedToEmp || "Unassigned"}
-                        </div>
-                      </td>
+                        {/* ASSIGNED */}
+                        <td className="py-3 text-xs text-gray-600 dark:text-gray-300">
+                          <div className="truncate max-w-[150px]">
+                            {ticket.assignedToEmp || (
+                              <span className="text-gray-400 dark:text-gray-500 italic">
+                                Unassigned
+                              </span>
+                            )}
+                          </div>
+                        </td>
 
-                      {/* ACTION */}
-                      <td className="py-3">
-                        <button
-                          onClick={() => {
-                            setSelectedTicket(ticket);
-                            setIsPopupOpen(true);
-                          }}
-                          className="
+                        {/* ACTION */}
+                        <td className="py-3">
+                          <button
+                            onClick={() => {
+                              setSelectedTicket(ticket);
+                              setIsPopupOpen(true);
+                            }}
+                            className="
     w-7 h-7 rounded-lg
-    bg-white/80 dark:bg-white/5
+    bg-gray-50 dark:bg-white/5
     border border-gray-200/60 dark:border-white/10
     flex items-center justify-center
     hover:bg-white dark:hover:bg-white/10
     hover:-translate-y-0.5 hover:shadow-md
     transition-all duration-200
+    focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40
   "
-                        >
-                          <Eye className="w-3.5 h-3.5 text-gray-700 dark:text-gray-300" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                            aria-label={`View ticket ${ticket.id}`}
+                          >
+                            <Eye className="w-3.5 h-3.5 text-gray-700 dark:text-gray-300" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
           {/* TOP ASSIGNEES */}
           <div
             className="
       rounded-2xl border border-gray-200/70 dark:border-white/10
-      bg-gradient-to-br from-white to-gray-50
-      dark:from-[#0f172a]/90 dark:to-[#0b1220]/90
-      backdrop-blur-xl 
-      p-3 shadow-sm
-      animate-fadeIn
-      transition-all duration-300
-      hover:shadow-lg
+      bg-white dark:bg-[#0f172a]/80
+      p-4 shadow-sm
+      transition-shadow duration-300
+      hover:shadow-md
     "
           >
             <div className="mb-4">
               <h2 className="text-sm font-semibold text-gray-900 dark:text-white">
                 Top Assignees
               </h2>
-              <p className="text-[11px] text-gray-500 dark:text-gray-400">
-                Employee ticket handling
-              </p>
             </div>
 
-            <div className="space-y-4">
-              {topEmployees.map((employee, index) => (
-                <div
-                  key={index}
-                  style={{ animationDelay: `${index * 60}ms` }}
-                  className="animate-fadeIn"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2.5">
-                      <div
-                        className="
-                  w-8 h-8 rounded-full
+            {topEmployees.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-10 text-center">
+                <div className="w-11 h-11 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center mb-3">
+                  <Users className="w-5 h-5 text-gray-400" />
+                </div>
+                <p className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                  No assignees yet
+                </p>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
+                  Assign tickets to see performance here.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {topEmployees.map((employee, index) => (
+                  <div
+                    key={index}
+                    style={{ animationDelay: `${index * 60}ms` }}
+                    className="animate-fadeIn"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div
+                          className="
+                  relative w-8 h-8 shrink-0 rounded-full
                   bg-gradient-to-br from-indigo-500 to-cyan-500
                   flex items-center justify-center
                   font-semibold text-[11px] text-white
                   shadow-sm
                 "
-                      >
-                        {employee.name?.charAt(0)}
+                        >
+                          {employee.name?.charAt(0)}
+                          {index === 0 && (
+                            <Sparkles className="w-2.5 h-2.5 absolute -top-1 -right-1 text-amber-400" />
+                          )}
+                        </div>
+
+                        <div className="min-w-0">
+                          <h4 className="text-xs font-medium text-gray-900 dark:text-white truncate">
+                            {employee.name}
+                          </h4>
+                          <p className="text-[10px] text-gray-500 dark:text-gray-400">
+                            {employee.tickets} tickets
+                          </p>
+                        </div>
                       </div>
 
-                      <div>
-                        <h4 className="text-xs font-medium text-gray-900 dark:text-white">
-                          {employee.name}
-                        </h4>
-                        <p className="text-[10px] text-gray-500 dark:text-gray-400">
-                          {employee.tickets} tickets
-                        </p>
-                      </div>
+                      <span className="text-xs font-medium text-gray-600 dark:text-gray-300 shrink-0">
+                        {employee.progress}
+                      </span>
                     </div>
 
-                    <span className="text-xs text-gray-600 dark:text-gray-300">
-                      {employee.progress}
-                    </span>
-                  </div>
-
-                  <div className="w-full h-1.5 rounded-full bg-gray-200/70 dark:bg-white/10 overflow-hidden">
-                    <div
-                      className="
+                    <div className="w-full h-1.5 rounded-full bg-gray-100 dark:bg-white/10 overflow-hidden">
+                      <div
+                        className="
                 h-full rounded-full
                 bg-gradient-to-r from-blue-500 to-cyan-400
                 transition-all duration-500
               "
-                      style={{ width: employee.progress }}
-                    />
+                        style={{ width: employee.progress }}
+                      />
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -630,14 +652,22 @@ const Dashboard = () => {
         @keyframes fadeIn {
           from {
             opacity: 0;
+            transform: translateY(4px);
           }
           to {
             opacity: 1;
+            transform: translateY(0);
           }
         }
 
         .animate-fadeIn {
-          animation: fadeIn 0.4s ease-out;
+          animation: fadeIn 0.4s ease-out both;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .animate-fadeIn {
+            animation: none;
+          }
         }
       `}</style>
 

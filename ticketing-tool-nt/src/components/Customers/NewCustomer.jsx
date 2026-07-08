@@ -69,7 +69,7 @@ const NewCustomer = () => {
   };
 
   return (
-    <div className="px-6 py-6 animate-fadeIn">
+   <div className="px-3 py-3 animate-fadeIn">
       {/* Success Popup */}
       {(successMessage || errorMessage) && (() => {
   const isSuccess = Boolean(successMessage);
@@ -144,20 +144,20 @@ const NewCustomer = () => {
       </button>
 
       {/* Header */}
-      <div className="relative mb-6 overflow-hidden rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 p-4">
+      <div className="relative mb-4 overflow-hidden rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 p-3">
         <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 left-0 w-36 h-36 bg-gradient-to-tr from-green-500/10 to-teal-500/10 rounded-full blur-2xl"></div>
 
-        <div className="relative z-10 flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 shadow-md">
-              <UserPlus className="h-6 w-6 text-white" />
+        <div className="relative z-10 flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 shadow-md">
+              <UserPlus className="h-4 w-4 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-gray-900 dark:text-white">
+              <h1 className="text-sm font-bold text-gray-900 dark:text-white">
                 New Customer
               </h1>
-              <p className="text-xs text-gray-600 dark:text-gray-400">
+              <p className="text-[11px] text-gray-600 dark:text-gray-400">
                 Create and add a new customer
               </p>
             </div>
@@ -167,16 +167,16 @@ const NewCustomer = () => {
           <div className="flex gap-2">
             <button
               onClick={handleClear}
-              className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-gray-800 rounded-lg shadow-sm border hover:bg-gray-100"
+              className="flex items-center gap-1.5 px-2.5 py-1 text-sm bg-white dark:bg-gray-800 rounded-lg shadow-sm border hover:bg-gray-100"
             >
-              <X size={16} /> Clear
+              <X size={14} /> Clear
             </button>
 
             <button
               onClick={handleSubmit}
-              className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg shadow-sm hover:bg-blue-700"
+              className="flex items-center gap-1.5 px-2.5 py-1 text-sm bg-blue-600 text-white rounded-lg shadow-sm hover:bg-blue-700"
             >
-              <Save size={16} /> Save
+              <Save size={14} /> Save
             </button>
           </div>
         </div>

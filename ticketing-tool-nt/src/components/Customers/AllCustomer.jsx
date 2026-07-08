@@ -112,7 +112,7 @@ const AllCustomer = () => {
   }
 
   return (
-    <div className="animate-fadeIn px-6 py-6">
+    <div className="px-3 py-3 animate-fadeIn">
 
       {/* Back */}
       <button
@@ -124,27 +124,27 @@ const AllCustomer = () => {
       </button>
 
       {/* Header */}
-      <div className="relative mb-6 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 p-4 animate-slideUp">
+      <div className="relative mb-4 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 p-3 animate-slideUp">
         <div className="flex items-center justify-between">
 
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-500">
-              <List className="h-6 w-6 text-white" />
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-500">
+              <List className="h-4 w-4 text-white" />
             </div>
 
             <div>
-              <h1 className="text-lg font-bold dark:text-white">
+              <h1 className="text-sm font-bold dark:text-white">
                 All Customers
               </h1>
-              <p className="text-xs text-gray-600 dark:text-gray-400">
+              <p className="text-[11px] text-gray-600 dark:text-gray-400">
                 View and manage all customers
               </p>
             </div>
           </div>
 
-          <div className="px-3 py-1.5 bg-white dark:bg-gray-800 rounded-lg border">
-            <p className="text-[10px] text-gray-500 uppercase">Total</p>
-            <p className="text-sm font-bold dark:text-white">
+          <div className="px-2.5 py-1 bg-white dark:bg-gray-800 rounded-lg border">
+            <p className="text-[9px] text-gray-500 uppercase">Total</p>
+            <p className="text-xs font-bold dark:text-white">
               {customers.length}
             </p>
           </div>

@@ -95,13 +95,13 @@ const Sidebar = () => {
               to={item.href}
               className={({ isActive }) =>
                 clsx(
-                  "flex items-center border transition-all duration-200 group",
+                  "flex transition-all duration-200 group border",
                   isActive
                     ? "border-blue-300 dark:border-blue-700 bg-gray-100/50 dark:bg-gray-800/50"
                     : "border-transparent hover:border-gray-200 dark:hover:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800",
                   sidebarOpen
-                    ? "px-2 py-1.5 rounded-md"
-                    : "p-1 rounded-full justify-center",
+                    ? "items-center px-2 py-1.5 rounded-md"
+                    : "flex-col items-center justify-center gap-0.5 px-1 py-2 rounded-md",
                 )
               }
             >
@@ -111,9 +111,16 @@ const Sidebar = () => {
               </div>
 
               {/* LABEL */}
-              {sidebarOpen && (
-                <span className="ml-2.5 text-sm font-medium">{item.name}</span>
-              )}
+              <span
+                className={clsx(
+                  "font-medium text-gray-600 dark:text-gray-300",
+                  sidebarOpen
+                    ? "ml-2.5 text-sm"
+                    : "text-[10px] leading-tight text-center",
+                )}
+              >
+                {item.name}
+              </span>
             </NavLink>
           );
         })}

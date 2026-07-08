@@ -45,6 +45,17 @@ const AllTickets = () => {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+  if (successMessage || errorMessage) {
+    const timer = setTimeout(() => {
+      setSuccessMessage("");
+      setErrorMessage("");
+    }, 2000); // Auto close after 2 seconds
+
+    return () => clearTimeout(timer);
+  }
+}, [successMessage, errorMessage]);
+
   const isFinalStatus = (status) => {
     return ["Completed", "Rejected"].includes(status);
   };
@@ -76,41 +87,47 @@ const AllTickets = () => {
     };
     fetchEmployees();
   }, []);
-
-  useEffect(() => {
-    const fetchTickets = async () => {
-      try {
-        setLoading(true);
-        const allTickets = await ticketAPI.getAllTickets();
-        const normalized = allTickets.map((t) => ({
-          ...t,
-          assignedToEmp: t.email || t.assignedToEmp || "",
-          companyName: t.companyName || t.company || "", // added companyName
-        }));
-        const visibleTickets =
-          role === "admin"
-            ? normalized
-            : role === "employee"
+  const fetchTickets = async () => {
+    try {
+      const allTickets = await ticketAPI.getAllTickets();
+      const normalized = allTickets.map((t) => ({
+        ...t,
+        assignedToEmp: t.email || t.assignedToEmp || "",
+        companyName: t.companyName || t.company || "", // added companyName
+      }));
+      const visibleTickets =
+        role === "admin"
+          ? normalized
+          : role === "employee"
+            ? normalized.filter(
+                (t) =>
+                  t.assignedToEmp === user.email ||
+                  t.assignedToEmp === user.name,
+              )
+            : role === "customer"
               ? normalized.filter(
                   (t) =>
-                    t.assignedToEmp === user.email ||
-                    t.assignedToEmp === user.name,
+                    t.createdBy === user.email || t.createdBy === user.name,
                 )
-              : role === "customer"
-                ? normalized.filter(
-                    (t) =>
-                      t.createdBy === user.email || t.createdBy === user.name,
-                  )
-                : [];
-        setTickets(visibleTickets);
-      } catch (err) {
-        console.error(err);
-        setTickets([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (user) fetchTickets();
+              : [];
+      setTickets(visibleTickets);
+    } catch (err) {
+      console.error(err);
+      setTickets([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    if (!user) return;
+
+    setLoading(true);
+
+    fetchTickets().finally(() => setLoading(false));
+
+    const interval = setInterval(fetchTickets, 1000);
+
+    return () => clearInterval(interval);
   }, [role, user]);
 
   const handleSort = (key) => {
@@ -466,7 +483,7 @@ const AllTickets = () => {
   };
 
   return (
-    <div className="animate-fadeIn px-6 py-6">
+    <div className="animate-fadeIn px-3 py-3">
       {(successMessage || errorMessage) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4 animate-fadeIn">
           <div className="w-full max-w-xs sm:max-w-sm bg-white dark:bg-gray-900 rounded-xl shadow-xl p-5 text-center animate-slideUp border border-gray-200 dark:border-gray-700">
@@ -524,23 +541,23 @@ const AllTickets = () => {
       </button>
 
       {/* Header */}
-      <div className="relative mb-6 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 p-4 animate-slideUp">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div className="relative mb-4 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 p-3 animate-slideUp">
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           {/* LEFT SIDE */}
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-blue-600 to-cyan-500">
-              <List className="h-6 w-6 text-white" />
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 rounded-lg bg-gradient-to-br from-blue-600 to-cyan-500">
+              <List className="h-4 w-4 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-bold dark:text-white">Ticket List</h1>
-              <p className="text-xs text-gray-600 dark:text-gray-400">
+              <h1 className="text-sm font-bold dark:text-white">Ticket List</h1>
+              <p className="text-[11px] text-gray-600 dark:text-gray-400">
                 View and manage all tickets
               </p>
             </div>
           </div>
 
           {/* RIGHT SIDE */}
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-3">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-2">
             {/* FILTER COMPONENT */}
             <TicketFilters
               filters={filters}
@@ -549,21 +566,18 @@ const AllTickets = () => {
               tickets={tickets}
               role={role}
             />
-
-    
           </div>
         </div>
       </div>
-      <div className="flex flex-wrap gap-2 mb-4">
-  {stats.map((item, index) => {
-    const Icon = item.icon;
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 mb-4">
+        {stats.map((item, index) => {
+          const Icon = item.icon;
 
-    return (
-      <div
-        key={index}
-        className="
+          return (
+            <div
+              key={index}
+              className="
           flex items-center gap-2
-          min-w-[150px]
           rounded-lg
           px-3 py-2
           bg-white dark:bg-gray-800
@@ -572,77 +586,76 @@ const AllTickets = () => {
           hover:shadow-md
           transition-all
         "
-      >
-        <div
-          className={`w-8 h-8 rounded-lg flex items-center justify-center ${item.iconColor}`}
-        >
-          <Icon className="w-4 h-4" />
-        </div>
+            >
+              <div
+                className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${item.iconColor}`}
+              >
+                <Icon className="w-4 h-4" />
+              </div>
 
-        <div className="leading-tight">
-          <p className="text-base font-bold text-gray-900 dark:text-white">
-            {item.value}
-          </p>
+              <div className="leading-tight min-w-0">
+                <p className="text-base font-bold text-gray-900 dark:text-white truncate">
+                  {item.value}
+                </p>
 
-          
-          <p className="text-[10px] text-gray-500 dark:text-gray-400">
-            {item.subtitle}
-          </p>
-        </div>
+                <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate">
+                  {item.subtitle}
+                </p>
+              </div>
+            </div>
+          );
+        })}
       </div>
-    );
-  })}
-</div>
       <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-xl shadow border dark:border-gray-700 animate-slideUp">
         <table className="w-full table-fixed">
           <thead>
             <tr className="border-b border-gray-200/60 dark:border-white/10">
-              <th className="w-[70px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
+              <th className="w-[50px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
                 Action
               </th>
 
-              <th className="w-[90px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
+              <th className="w-[70px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
                 Ticket No
               </th>
 
-              <th className="w-[200px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
+              <th className="w-[150px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
                 Title
               </th>
 
-              <th className="w-[120px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
+              <th className="w-[90px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
                 App
               </th>
 
-              <th className="w-[120px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
+              <th className="w-[90px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
                 Company
               </th>
 
-              <th className="w-[120px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
+              <th className="w-[90px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
                 User
               </th>
 
-              <th className="w-[110px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
+              <th className="w-[85px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
                 Priority
               </th>
 
-              <th className="w-[120px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
+              <th className="w-[95px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
                 Status
               </th>
 
               {role !== "employee" && (
-                <th className="w-[140px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
+                <th className="w-[110px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
                   Assign
                 </th>
               )}
 
-              <th className="w-[110px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
+              <th className="w-[80px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
                 Date
               </th>
-              <th className="w-[110px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
+              <th className="w-[70px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
                 Aging
               </th>
 
-              <th className="w-[120px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
+              <th className="w-[95px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
                 SLA Status
               </th>
             </tr>
@@ -678,14 +691,14 @@ const AllTickets = () => {
                   </td>
 
                   {/* ID */}
-                  <td className="px-2 py-3 text-xs text-gray-700 dark:text-gray-300">
+                  <td className="px-2 py-3 text-xs text-gray-700 dark:text-gray-300 truncate">
                     {ticket.id}
                   </td>
 
                   {/* TITLE */}
                   <td className="px-2 py-3 text-xs text-gray-900 dark:text-white">
                     <div
-                      className="truncate max-w-[180px]"
+                      className="truncate max-w-[130px]"
                       title={ticket.title}
                     >
                       {ticket.title}
@@ -720,7 +733,7 @@ const AllTickets = () => {
                         handlePriorityChange(ticket.id, e.target.value)
                       }
                       disabled={role !== "admin"}
-                      className="text-xs border rounded px-2 py-1 dark:bg-gray-700 w-full disabled:opacity-60"
+                      className="text-xs border rounded px-1 py-1 w-auto dark:bg-gray-700 w-full disabled:opacity-60"
                     >
                       <option value="Low">Low</option>
                       <option value="Medium">Medium</option>
@@ -740,7 +753,7 @@ const AllTickets = () => {
                         role === "customer" ||
                         (role === "employee" && isFinalStatus(ticket.status))
                       }
-                      className="text-xs border rounded px-2 py-1 dark:bg-gray-700"
+                      className="text-xs border rounded px-1 py-1 w-auto dark:bg-gray-700 w-full"
                     >
                       {getStatusOptions().map((status) => (
                         <option key={status} value={status}>
@@ -760,7 +773,7 @@ const AllTickets = () => {
                             handleAssignChange(ticket.id, e.target.value)
                           }
                           disabled={assigning[ticket.id]}
-                          className="text-xs border rounded px-2 py-1 dark:bg-gray-700 max-w-[120px]"
+                          className="text-xs border rounded px-1 py-1 w-auto dark:bg-gray-700 w-full"
                         >
                           <option value="">Unassigned</option>
                           {employees.map((emp) => (
@@ -770,7 +783,7 @@ const AllTickets = () => {
                           ))}
                         </select>
                       ) : (
-                        <span className="text-xs text-gray-600 dark:text-gray-300">
+                        <span className="text-xs text-gray-600 dark:text-gray-300 truncate block">
                           {assignedEmployee?.name || "Unassigned"}
                         </span>
                       )}
@@ -778,10 +791,10 @@ const AllTickets = () => {
                   )}
 
                   {/* DATE */}
-                  <td className="px-2 py-3 text-xs text-gray-600 dark:text-gray-300">
+                  <td className="px-2 py-3 text-xs text-gray-600 dark:text-gray-300 truncate">
                     {formatDate(ticket.docDate)}
                   </td>
-                  <td className="px-2 py-3 text-xs text-gray-600 dark:text-gray-300">
+                  <td className="px-2 py-3 text-xs text-gray-600 dark:text-gray-300 truncate">
                     {getTicketAge(ticket)}
                   </td>
                   {/* SLA TIME */}

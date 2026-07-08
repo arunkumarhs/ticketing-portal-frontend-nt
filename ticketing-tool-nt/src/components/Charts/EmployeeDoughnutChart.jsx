@@ -44,7 +44,7 @@ const TicketPriorityChart = () => {
     datasets: [
       {
         data: [priorityData.high, priorityData.medium, priorityData.normal],
-        backgroundColor: ["#ef4444", "#2563eb", "#10b981"],
+        backgroundColor: ["#f97316", "#8b5cf6", "#14b8a6"],
         borderWidth: 0,
         cutout: "72%",
         spacing: 2,
@@ -91,7 +91,7 @@ const TicketPriorityChart = () => {
   return (
     <div>
       {/* MAIN CONTENT */}
-      <div className="flex items-center gap-20">
+      <div className="flex items-center gap-5">
         {/* CHART */}
         <div className="relative w-[220px] h-[180px]">
           <Doughnut data={chartData} options={options} />
@@ -109,11 +109,11 @@ const TicketPriorityChart = () => {
         </div>
 
         {/* LEGEND */}
-        <div className="flex-1 space-y-3">
+        <div className="flex-1 flex flex-col gap-2">
           {/* HIGH */}
           <div className="flex items-center justify-between min-h-[40px]">
             <div className="flex items-center gap-3">
-              <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
+              <div className="w-2.5 h-2.5 rounded-full bg-orange-500" />
 
               <span className="text-sm text-gray-700 dark:text-gray-300">
                 High ({priorityData.high}) -{" "}
@@ -125,7 +125,7 @@ const TicketPriorityChart = () => {
           {/* MEDIUM */}
           <div className="flex items-center justify-between min-h-[40px]">
             <div className="flex items-center gap-3">
-              <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+              <div className="w-2.5 h-2.5 rounded-full bg-violet-500" />
 
               <span className="text-sm text-gray-700 dark:text-gray-300">
                 Medium ({priorityData.medium}) -{" "}
@@ -137,7 +137,7 @@ const TicketPriorityChart = () => {
           {/* NORMAL */}
           <div className="flex items-center justify-between min-h-[40px]">
             <div className="flex items-center gap-3">
-              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+              <div className="w-2.5 h-2.5 rounded-full bg-teal-500" />
 
               <span className="text-sm text-gray-700 dark:text-gray-300">
                 Low ({priorityData.normal}) -{" "}
@@ -148,14 +148,14 @@ const TicketPriorityChart = () => {
         </div>
       </div>
 
-      {/* ALERT */}
-      <div className="mt-5 flex justify-center items-center">
-        <AlertTriangle size={15} className="text-red-500" />
+     {/* ALERT */}
+<div className="mt-5 flex justify-center items-center">
+  <AlertTriangle size={15} className="text-red-500" />
 
-        <p className="pl-2 text-xs text-red-500 font-medium">
-          High priority tickets require immediate attention
-        </p>
-      </div>
+  <p className="pl-2 text-xs text-red-500 font-medium">
+    High priority tickets require immediate attention
+  </p>
+</div>
     </div>
   );
 };

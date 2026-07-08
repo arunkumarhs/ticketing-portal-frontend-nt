@@ -203,24 +203,29 @@ const GetTicketReports = () => {
   };
 
   return (
-    <div className="p-6 space-y-5 animate-fadeIn">
+    <div className="px-3 py-3 animate-fadeIn">
       {/* HEADER */}
-      <div className="flex items-center gap-3">
-        <div className="p-2 rounded-lg bg-gradient-to-br from-teal-600 to-cyan-500 shadow">
-          <List className="text-white w-5 h-5" />
-        </div>
+      <div className="relative mb-4 overflow-hidden rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 p-3">
+        <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-36 h-36 bg-gradient-to-tr from-teal-500/10 to-emerald-500/10 rounded-full blur-2xl"></div>
 
-        <div>
-          <h1 className="text-xl font-bold text-gray-800 dark:text-white">
-            Ticket Reports
-          </h1>
-          <p className="text-xs text-gray-500">
-            Filter, analyze and export ticket data
-          </p>
+        <div className="relative z-10 flex items-center gap-2">
+          <div className="p-1.5 rounded-lg bg-gradient-to-br from-teal-600 to-cyan-500 shadow-md">
+            <List className="h-4 w-4 text-white" />
+          </div>
+
+          <div>
+            <h1 className="text-sm font-bold text-gray-900 dark:text-white">
+              Ticket Reports
+            </h1>
+            <p className="text-[11px] text-gray-600 dark:text-gray-400">
+              Filter, analyze and export ticket data
+            </p>
+          </div>
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
         {stats.map((item, i) => {
           const Icon = item.icon;
 
@@ -229,20 +234,21 @@ const GetTicketReports = () => {
               key={i}
               className="
           flex items-center gap-3
-          min-w-[150px]
+          w-full
           rounded-lg
           px-3 py-2
           bg-white dark:bg-gray-800
           border border-gray-100 dark:border-gray-700
           shadow-sm
-          hover:shadow-md transition
+          hover:shadow-md
+          transition
         "
             >
               {/* ICON */}
               <div
-                className={`w-9 h-9 rounded-lg flex items-center justify-center ${item.iconColor}`}
+                className={`w-8 h-8 rounded-lg flex items-center justify-center ${item.iconColor}`}
               >
-                <Icon className="w-5 h-5" />
+                <Icon className="w-4 h-4" />
               </div>
 
               {/* TEXT */}

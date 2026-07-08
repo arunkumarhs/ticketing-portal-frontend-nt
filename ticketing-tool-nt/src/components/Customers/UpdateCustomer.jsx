@@ -143,7 +143,7 @@ const UpdateCustomer = () => {
   };
 
   return (
-    <div className="px-6 py-6 animate-fadeIn bg-white dark:bg-gray-900 min-h-screen">
+    <div className="px-3 py-3 animate-fadeIn bg-white dark:bg-gray-900 min-h-screen">
       {(successMessage || errorMessage) &&
         (() => {
           const isSuccess = Boolean(successMessage);
@@ -208,16 +208,16 @@ const UpdateCustomer = () => {
         <span className="text-xs">Back to Customer Management</span>
       </button>
 
-      <div className="mb-6 p-4 rounded-xl bg-gray-100 dark:bg-gray-800 flex justify-between items-center animate-slideUp">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-yellow-500 to-orange-500 shadow-md">
-            <Edit className="h-6 w-6 text-white" />
+      <div className="mb-4 p-3 rounded-xl bg-gray-100 dark:bg-gray-800 flex justify-between items-center animate-slideUp">
+        <div className="flex items-center gap-2">
+          <div className="p-1.5 rounded-lg bg-gradient-to-br from-yellow-500 to-orange-500 shadow-md">
+            <Edit className="h-4 w-4 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-gray-900 dark:text-white">
+            <h1 className="text-sm font-bold text-gray-900 dark:text-white">
               Update Customer
             </h1>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-[11px] text-gray-500 dark:text-gray-400">
               Search and update customer details
             </p>
           </div>
@@ -225,7 +225,7 @@ const UpdateCustomer = () => {
 
         <button
           onClick={handleClear}
-          className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 animate-slideUp"
+          className="flex items-center gap-1.5 px-2.5 py-1 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 animate-slideUp"
         >
           <X size={14} /> Clear
         </button>

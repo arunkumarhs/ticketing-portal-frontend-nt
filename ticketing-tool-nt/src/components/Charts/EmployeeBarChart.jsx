@@ -189,7 +189,7 @@ const EmployeeLineChart = ({ theme = "dark" }) => {
      
 
       {/* CHART */}
-      <div className="h-[250px]">
+      <div className="h-[230px]">
         <Line data={data} options={options} />
       </div>
     </div>
