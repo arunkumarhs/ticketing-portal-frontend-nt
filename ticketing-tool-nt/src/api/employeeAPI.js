@@ -83,45 +83,61 @@ export const employeeAPI = {
   },
 
   // CREATE EMPLOYEE
-  createEmployee: async (employeeData) => {
+createEmployee: async (employeeData) => {
+  try {
+    const payload = buildEmployeePayload(employeeData, false);
+
+    console.log("CREATE PAYLOAD:", payload);
+
+    let data;
     try {
-      const payload = buildEmployeePayload(employeeData, false);
+      data = await apiClient.post("/api/employee/createemployee", payload);
+    } catch (err) {
+      console.warn("Retrying create with DTO wrapper...");
 
-      console.log("CREATE PAYLOAD:", payload);
+      data = await apiClient.post("/api/employee/createemployee", {
+        createEmployeeDTO: payload,
+      });
+    }
 
-      let data;
-      try {
-        data = await apiClient.post("/api/employee/createemployee", payload);
-      } catch (err) {
-        console.warn("Retrying create with DTO wrapper...");
+    console.log("CREATE RESPONSE:", data);
 
-        data = await apiClient.post("/api/employee/createemployee", {
-          createEmployeeDTO: payload,
-        });
-      }
-
-      console.log("CREATE RESPONSE:", data);
-
-      if (data?.statusFlag === "Ok" || data?.status === true) {
-        return { success: true, data };
-      }
-
+    // Success
+    if (data?.status === true || data?.statusFlag === "Ok") {
       return {
-        success: false,
-        error: data?.message || data?.errors || "Failed to create employee",
-      };
-    } catch (error) {
-      console.error("CREATE ERROR:", error?.response?.data || error.message);
-
-      return {
-        success: false,
-        error:
-          error?.response?.data?.message ||
-          JSON.stringify(error?.response?.data) ||
-          error.message,
+        success: true,
+        ...data,
       };
     }
-  },
+
+    // API returned an error response
+    return {
+      success: false,
+      ...data,
+      error:
+        data?.paramObjectsMap?.errorMessage ||
+        data?.paramObjectsMap?.message ||
+        data?.message ||
+        data?.errors ||
+        "Failed to create employee",
+    };
+  } catch (error) {
+    console.error("CREATE ERROR:", error?.response?.data || error.message);
+
+    const errorData = error?.response?.data || {};
+
+    return {
+      success: false,
+      ...errorData,
+      error:
+        errorData?.paramObjectsMap?.errorMessage ||
+        errorData?.paramObjectsMap?.message ||
+        errorData?.message ||
+        error.message ||
+        "Failed to create employee",
+    };
+  }
+},
 
   // UPDATE EMPLOYEE
   updateEmployee: async (employeeData) => {

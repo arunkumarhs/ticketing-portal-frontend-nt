@@ -1,4 +1,4 @@
-import { FileText, BarChart3, TrendingUp } from "lucide-react";
+import { FileText, BarChart3, TrendingUp, Timer } from "lucide-react";
 
 const ReportMenu = {
   title: "Ticket Reports",
@@ -12,7 +12,14 @@ const ReportMenu = {
       path: "/ticketreports",
       icon: BarChart3,
       color: "teal",
-      roles: ["admin", "employee", "customer"],
+      roles: ["admin"],
+    },
+    {
+      name: "SLA Report",
+      path: "/sla/reports",
+      icon: Timer,
+      color: "teal",
+      roles: ["admin"],
     },
   ],
 };

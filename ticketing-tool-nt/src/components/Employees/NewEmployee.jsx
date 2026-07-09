@@ -93,17 +93,29 @@ const NewEmployee = () => {
         password: encryptPassword("Wds@2022"),
       };
 
-      const res = await employeeAPI.createEmployee(payload);
+     const res = await employeeAPI.createEmployee(payload);
+console.log("Response:", res);
+if (res.status === true) {
+  setSuccessMessage(`Employee "${employee}" created successfully!`);
+  handleClear();
+} else {
+  console.log(res); // verify
 
-      if (res.success) {
-        setSuccessMessage(`Employee "${employee}" created successfully!`);
-        handleClear();
-      } else {
-        setErrorMessage(res.error || "Failed to create employee");
-      }
+  setErrorMessage(
+    res.paramObjectsMap?.errorMessage ??
+    res.paramObjectsMap?.message ??
+    "Failed to create employee"
+  );
+}
     } catch (err) {
-      setErrorMessage("Something went wrong");
-    }
+  setErrorMessage(
+    err?.response?.data?.paramObjectsMap?.errorMessage ||
+    err?.response?.data?.paramObjectsMap?.message ||
+    err?.response?.data?.message ||
+    err?.message ||
+    "Something went wrong"
+  );
+}
   };
 
   return (

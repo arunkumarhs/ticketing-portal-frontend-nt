@@ -11,6 +11,7 @@ import {
   Clock3,
   XCircle,
   UserX,
+  AlertTriangle,
 } from "lucide-react";
 import { ticketAPI } from "../../api/ticketAPI";
 import { employeeAPI } from "../../api/employeeAPI";
@@ -62,14 +63,37 @@ const AllTickets = () => {
 
   const recordsPerPage = 10;
   const SLA_HOURS = {
-    low: 48,
-    medium: 24,
-    high: 8,
-    critical: 3,
+    low: 72,
+    medium: 48, 
+    high: 24,
+    critical: 12,
   };
   const navigate = useNavigate();
   const user = useSelector((state) => state.auth.user);
   const role = user?.type?.toLowerCase();
+  const [dismissedAlerts, setDismissedAlerts] = useState(() => {
+  try {
+    const stored = localStorage.getItem(`dismissedCriticalAlerts_${user?.email}`);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+});
+
+const dismissAlert = (ticketId) => {
+  setDismissedAlerts((prev) => {
+    const updated = [...prev, ticketId];
+    try {
+      localStorage.setItem(
+        `dismissedCriticalAlerts_${user?.email}`,
+        JSON.stringify(updated)
+      );
+    } catch (e) {
+      console.error(e);
+    }
+    return updated;
+  });
+};
   const [filters, setFilters] = useState({
     application: "",
     status: "",
@@ -231,6 +255,17 @@ const AllTickets = () => {
     const start = (currentPage - 1) * recordsPerPage;
     return sortedTickets.slice(start, start + recordsPerPage);
   }, [sortedTickets, currentPage]);
+
+  const criticalAlerts = useMemo(() => {
+  if (role !== "employee" || !user) return [];
+  return tickets.filter(
+    (t) =>
+      (t.priority || "").toLowerCase() === "critical" &&
+      !isFinalStatus(t.status) &&
+      (t.assignedToEmp === user.email || t.assignedToEmp === user.name) &&
+      !dismissedAlerts.includes(t.id)
+  );
+}, [tickets, role, user, dismissedAlerts]);
 
   const totalPages = Math.ceil(sortedTickets.length / recordsPerPage);
 
@@ -484,6 +519,36 @@ const AllTickets = () => {
 
   return (
     <div className="animate-fadeIn px-3 py-3">
+{criticalAlerts.length > 0 && (
+  <div className="fixed top-[60px] right-4 z-50 flex flex-col gap-2 w-72 sm:w-80">
+    {criticalAlerts.map((ticket) => (
+      <div
+        key={ticket.id}
+        className="relative flex items-start gap-2 rounded-xl border border-red-200 dark:border-red-500/30 bg-white dark:bg-gray-800 shadow-lg p-3 pr-8 animate-slideUp"
+      >
+        <div className="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-500/10 flex items-center justify-center shrink-0">
+          <AlertTriangle className="w-4 h-4 text-red-600 dark:text-red-400" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-xs font-semibold text-red-700 dark:text-red-400">
+            Critical Ticket Assigned
+          </p>
+          <p className="text-[11px] text-gray-600 dark:text-gray-300 truncate">
+            #{ticket.id} — {ticket.title}
+          </p>
+        </div>
+        <button
+          onClick={() => dismissAlert(ticket.id)}
+          className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition"
+        >
+          <X size={12} />
+        </button>
+      </div>
+    ))}
+  </div>
+)}
+
+
       {(successMessage || errorMessage) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4 animate-fadeIn">
           <div className="w-full max-w-xs sm:max-w-sm bg-white dark:bg-gray-900 rounded-xl shadow-xl p-5 text-center animate-slideUp border border-gray-200 dark:border-gray-700">
@@ -652,7 +717,7 @@ const AllTickets = () => {
                 Date
               </th>
               <th className="w-[70px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
-                Aging
+                Elapsed
               </th>
 
               <th className="w-[95px] pb-3 pt-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 text-left px-2">
@@ -733,7 +798,7 @@ const AllTickets = () => {
                         handlePriorityChange(ticket.id, e.target.value)
                       }
                       disabled={role !== "admin"}
-                      className="text-xs border rounded px-1 py-1 w-auto dark:bg-gray-700 w-full disabled:opacity-60"
+                      className="text-xs border rounded px-1 py-1  dark:bg-gray-700 w-full disabled:opacity-60"
                     >
                       <option value="Low">Low</option>
                       <option value="Medium">Medium</option>
@@ -753,7 +818,7 @@ const AllTickets = () => {
                         role === "customer" ||
                         (role === "employee" && isFinalStatus(ticket.status))
                       }
-                      className="text-xs border rounded px-1 py-1 w-auto dark:bg-gray-700 w-full"
+                      className="text-xs border rounded px-1 py-1  dark:bg-gray-700 w-full"
                     >
                       {getStatusOptions().map((status) => (
                         <option key={status} value={status}>
@@ -773,7 +838,7 @@ const AllTickets = () => {
                             handleAssignChange(ticket.id, e.target.value)
                           }
                           disabled={assigning[ticket.id]}
-                          className="text-xs border rounded px-1 py-1 w-auto dark:bg-gray-700 w-full"
+                          className="text-xs border rounded px-1 py-1 dark:bg-gray-700 w-full"
                         >
                           <option value="">Unassigned</option>
                           {employees.map((emp) => (

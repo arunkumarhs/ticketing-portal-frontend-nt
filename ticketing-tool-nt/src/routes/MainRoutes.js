@@ -15,6 +15,7 @@ import UpdateCustomer from "../components/Customers/UpdateCustomer";
 import ProfileSettings from "../components/settings/Profile";
 import NewCustomer from "../components/Customers/NewCustomer";
 import GetTicketReports from "../components/Report/GetTicketReports";
+import SLAReport from "../components/Report/SLAReport";
 
 const Dashboard = Loadable(lazy(() => import("../pages/Dashboard")));
 
@@ -144,6 +145,14 @@ const MainRoutes = {
       element: (
         <ProtectedRoute allowedRoles={["admin", "employee", "customer"]}>
           <GetTicketReports />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/sla/reports",
+      element: (
+        <ProtectedRoute allowedRoles={["admin", "employee", "customer"]}>
+          <SLAReport />
         </ProtectedRoute>
       ),
     },
