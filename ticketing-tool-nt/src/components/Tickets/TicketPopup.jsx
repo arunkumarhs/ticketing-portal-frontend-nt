@@ -3,6 +3,32 @@ import { useSelector } from "react-redux";
 import { X, Download, Check, Edit, Trash2, Save } from "lucide-react";
 import { ticketAPI } from "../../api/ticketAPI";
 
+// Inject keyframe animations once (fade in for the backdrop, slide up for the modal/comments)
+const styles = `
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+.animate-fadeIn { animation: fadeIn 0.4s ease-out; }
+.animate-slideUp { animation: slideUp 0.4s ease-out forwards; }
+.animate-scaleIn { animation: scaleIn 0.25s ease-out forwards; }
+`;
+
+if (typeof document !== "undefined" && !document.getElementById("ticket-popup-animations")) {
+  const styleSheet = document.createElement("style");
+  styleSheet.id = "ticket-popup-animations";
+  styleSheet.textContent = styles;
+  document.head.appendChild(styleSheet);
+}
+
 const TicketPopup = ({ isOpen, onClose, ticket, onUpdateTicket }) => {
   const loggedInUser = useSelector((state) => state.auth.user);
   const currentUserEmail = loggedInUser?.email?.toLowerCase() || "";
@@ -369,7 +395,7 @@ const TicketPopup = ({ isOpen, onClose, ticket, onUpdateTicket }) => {
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-3"
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-3 animate-fadeIn"
       onClick={onClose}
     >
       {/* {(successMessage || errorMessage) && (
@@ -410,7 +436,7 @@ const TicketPopup = ({ isOpen, onClose, ticket, onUpdateTicket }) => {
       )} */}
 
       <div
-        className="w-full max-w-xl max-h-[90vh] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200 dark:border-gray-700"
+        className="w-full max-w-xl max-h-[90vh] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200 dark:border-gray-700 animate-scaleIn"
         onClick={(e) => e.stopPropagation()}
       >
         {/* HEADER */}
@@ -431,7 +457,7 @@ const TicketPopup = ({ isOpen, onClose, ticket, onUpdateTicket }) => {
           {ticketData && (
             <>
               {/* Ticket Info */}
-              <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 space-y-2 text-sm">
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 space-y-2 text-sm animate-slideUp">
                 <div className="flex justify-between items-center">
                   <p>
                     <b>Title:</b> {ticketData.title}
@@ -469,7 +495,10 @@ const TicketPopup = ({ isOpen, onClose, ticket, onUpdateTicket }) => {
               {/* Ticket Image */}
 
               {ticketData.imageData && (
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-4">
+                <div
+                  className="bg-white dark:bg-gray-800 rounded-xl p-4 animate-slideUp"
+                  style={{ animationDelay: "0.05s" }}
+                >
                   <h3 className="font-semibold mb-3 text-gray-900 dark:text-white">
                     Attachment
                   </h3>
@@ -511,7 +540,10 @@ const TicketPopup = ({ isOpen, onClose, ticket, onUpdateTicket }) => {
               )}
 
               {/* COMMENTS */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-4">
+              <div
+                className="bg-white dark:bg-gray-800 rounded-xl p-4 animate-slideUp"
+                style={{ animationDelay: "0.1s" }}
+              >
                 <h3 className="font-semibold mb-3">Comments</h3>
                 {loading ? (
                   <p className="text-sm text-gray-500">Loading...</p>
@@ -521,7 +553,7 @@ const TicketPopup = ({ isOpen, onClose, ticket, onUpdateTicket }) => {
                   </p>
                 ) : (
                   <div className="space-y-4">
-                    {comments.map((c) => {
+                    {comments.map((c, idx) => {
                       const name = getDisplayName(c);
                       const initial = name.charAt(0).toUpperCase();
                       const commentOwner =
@@ -533,9 +565,12 @@ const TicketPopup = ({ isOpen, onClose, ticket, onUpdateTicket }) => {
                       return (
                         <div
                           key={c.id}
-                          className={`flex gap-3 items-start ${
+                          className={`flex gap-3 items-start animate-slideUp ${
                             isOwnMessage ? "justify-end" : "justify-start"
                           }`}
+                          style={{
+                            animationDelay: `${Math.min(idx * 0.04, 0.4)}s`,
+                          }}
                         >
                           {!isOwnMessage && (
                             <div className="w-8 h-8 rounded-full bg-blue-500 dark:bg-blue-600 text-white flex items-center justify-center text-sm">
@@ -593,7 +628,8 @@ const TicketPopup = ({ isOpen, onClose, ticket, onUpdateTicket }) => {
                                             isOwnMessage ? "right-0" : "left-0"
                                           } bg-white dark:bg-gray-800 
       border border-gray-200 dark:border-gray-700 
-      rounded-lg shadow-lg z-10 min-w-[130px] overflow-hidden`}
+      rounded-lg shadow-lg z-10 min-w-[130px] overflow-hidden animate-scaleIn`}
+                                          style={{ transformOrigin: "top" }}
                                         >
                                           {/* EDIT */}
                                           <button
@@ -739,7 +775,7 @@ const TicketPopup = ({ isOpen, onClose, ticket, onUpdateTicket }) => {
 
               {/* ADD NEW COMMENT */}
               {!editingComment && (
-                <div className="flex justify-center items-center gap-3 bg-gray-50 dark:bg-gray-800 rounded-xl p-4 ">
+                <div className="flex justify-center items-center gap-3 bg-gray-50 dark:bg-gray-800 rounded-xl p-4 animate-slideUp">
                   <textarea
                     className="w-full h-10 border border-gray-300 dark:border-gray-600 rounded p-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     placeholder="Add a comment..."
@@ -769,7 +805,7 @@ const TicketPopup = ({ isOpen, onClose, ticket, onUpdateTicket }) => {
                   onClick={() => setPreviewImage(null)}
                 >
                   <div
-                    className="relative max-w-5xl w-full flex justify-center"
+                    className="relative max-w-5xl w-full flex justify-center animate-scaleIn"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <button
